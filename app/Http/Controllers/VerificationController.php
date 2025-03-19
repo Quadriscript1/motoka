@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\VerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,15 +21,20 @@ class VerificationController extends Controller
      */
     public function sendEmailVerification()
     {
+<<<<<<< HEAD
         $user = auth('api')->user();
         
+=======
+        $user = Auth::user();
+
+>>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if (!$user->email) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'No email address associated with this account'
             ], 400);
         }
-        
+
         if ($user->email_verified_at) {
             return response()->json([
                 'status' => 'error',
@@ -55,15 +61,20 @@ class VerificationController extends Controller
      */
     public function sendPhoneVerification()
     {
+<<<<<<< HEAD
         $user = auth('api')->user();
         
+=======
+        $user = Auth::user();
+
+>>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if (!$user->phone_number) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'No phone number associated with this account'
             ], 400);
         }
-        
+
         if ($user->phone_verified_at) {
             return response()->json([
                 'status' => 'error',
@@ -94,8 +105,13 @@ class VerificationController extends Controller
             'code' => 'required|string|size:6'
         ]);
 
+<<<<<<< HEAD
         $user = auth('api')->user();
         
+=======
+        $user = Auth::user();
+
+>>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if ($user->email_verified_at) {
             return response()->json([
                 'status' => 'error',
@@ -117,6 +133,63 @@ class VerificationController extends Controller
         ], 400);
     }
 
+    public function verifyEmail2(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|exists:users,email',
+            'code' => 'required|string|size:6'
+        ]);
+
+        $getUser = User::where('email', $request->email)->first();
+
+        if (!$getUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        if ($getUser->email_verification_code === $request->code) {
+            $getUser->email_verified_at = now();
+            $getUser->email_verification_code = null;
+            $getUser->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Email verified successfully'
+        ]);
+    }
+
+    public function verifyPhone2(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required|string|exists:users,phone_number',
+            'code' => 'required|string|size:6'
+        ]);
+
+        $getUser = User::where('phone_number', $request->phone_number)->first();
+
+
+        if (!$getUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        if ($getUser->phone_verification_code === $request->code) {
+            $getUser->phone_verified_at = now();
+            $getUser->phone_verification_code = null;
+            $getUser->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Phone number verified successfully'
+        ]);
+    }
+
     /**
      * Verify phone with code
      */
@@ -126,8 +199,13 @@ class VerificationController extends Controller
             'code' => 'required|string|size:6'
         ]);
 
+<<<<<<< HEAD
         $user = auth('api')->user();
         
+=======
+        $user = Auth::user();
+
+>>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if ($user->phone_verified_at) {
             return response()->json([
                 'status' => 'error',
