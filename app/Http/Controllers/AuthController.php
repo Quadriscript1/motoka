@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Services\VerificationService;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Mail\SendEmailVerification;
+use App\Mail\SendPhoneVerification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Services\VerificationService;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -32,7 +35,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required_without:phone_number|string|email|max:255|unique:users,email,NULL,id,deleted_at,NULL',
             'phone_number' => 'required_without:email|string|unique:users,phone_number,NULL,id,deleted_at,NULL',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6',
         ]);
 
         // Custom message for either email or phone required
@@ -57,17 +60,33 @@ class AuthController extends Controller
         // Send verification code based on registration method
         try {
             if ($request->email) {
-                $this->verificationService->sendEmailVerification($user);
+                $code = Str::random(6);
+                $user->email_verification_code = $code;
+
+                if ($user->save()) {
+                    Mail::to($request->email)->queue(new SendEmailVerification($user, $code));
+                }
+
+                // $this->verificationService->sendEmailVerification($user);
             }
             if ($request->phone_number) {
-                $this->verificationService->sendPhoneVerification($user);
+
+                $code = rand(100000, 999999);
+                $user->phone_verification_code = $code;
+
+                if ($user->save()) {
+                    Mail::to($request->email)->queue(new SendPhoneVerification($user, $code));
+                }
+
+                // $this->verificationService->sendPhoneVerification($user);
             }
         } catch (\Exception $e) {
             // Log the error but don't stop the registration process
             Log::error('Failed to send verification code: ' . $e->getMessage());
         }
 
-        $token = auth('api')->login($user);
+
+        $token = $user->createToken("API TOKEN")->plainTextToken;
 
         $message = 'User created successfully. ';
         if ($request->email) {
@@ -112,6 +131,14 @@ class AuthController extends Controller
             'password' => $request->password
         ];
 
+        // if (!Auth::attempt($credentials)) {
+        //     return response([
+        //         "status" => false,
+        //         "message" => "Email & Password does not match with our record"
+        //     ], 404);
+        // }
+        // $token = $user->createToken("API TOKEN")->plainTextToken;
+
         if (!$token = auth('api')->attempt($credentials)) {
             return response()->json([
                 'status' => 'error',
@@ -120,7 +147,7 @@ class AuthController extends Controller
         }
 
         $user = auth('api')->user();
-        
+
         if (!$user) {
             auth('api')->logout();
             return response()->json([
@@ -227,16 +254,16 @@ class AuthController extends Controller
     {
         try {
             $socialUser = Socialite::driver($provider)->user();
-            
+
             // Find existing user or create new
             $user = User::where('social_id', $socialUser->getId())
-                        ->where('social_type', $provider)
-                        ->first();
+                ->where('social_type', $provider)
+                ->first();
 
             if (!$user) {
                 // Check if user exists with same email
                 $user = User::where('email', $socialUser->getEmail())->first();
-                
+
                 if (!$user) {
                     // Create new user
                     $user = User::create([
@@ -268,7 +295,6 @@ class AuthController extends Controller
                     'type' => 'bearer',
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to authenticate'], 422);
         }
