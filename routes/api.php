@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CarController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +27,13 @@ Route::controller(VerificationController::class)->middleware('auth:api')->group(
     Route::post('email/verify', 'verifyEmail');
     Route::post('phone/verify/send', 'sendPhoneVerification');
     Route::post('phone/verify', 'verifyPhone');
+});
+
+// Car management routes
+Route::controller(CarController::class)->middleware('auth:api')->group(function () {
+    Route::post('cars', 'register');
+    Route::get('cars', 'getMyCars');
+    Route::get('cars/{id}', 'show');
+    Route::put('cars/{id}', 'update');
+    Route::delete('cars/{id}', 'destroy');
 });

@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Event;
+use App\Events\VerificationEvent;
 
 class VerificationService
 {
@@ -16,6 +18,8 @@ class VerificationService
         $code = Str::random(6);
         $user->email_verification_code = $code;
         $user->save();
+
+        Event::dispatch(new VerificationEvent($user, 'email', $code));
 
         Mail::send('emails.verification', ['code' => $code], function ($message) use ($user) {
             $message->from('noreply@motoka.com', 'Motoka')
@@ -31,6 +35,8 @@ class VerificationService
         $code = rand(100000, 999999);
         $user->phone_verification_code = $code;
         $user->save();
+
+        Event::dispatch(new VerificationEvent($user, 'phone', $code));
 
         try {
             Mail::send('emails.phone-verification', ['code' => $code], function ($message) use ($user) {

@@ -68,6 +68,7 @@ class AuthController extends Controller
         }
 
         $token = auth('api')->login($user);
+        $user = $user->fresh(); // Get fresh user data
 
         $message = 'User created successfully. ';
         if ($request->email) {

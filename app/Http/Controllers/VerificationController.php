@@ -20,7 +20,7 @@ class VerificationController extends Controller
      */
     public function sendEmailVerification()
     {
-        $user = Auth::user();
+        $user = auth('api')->user();
         
         if (!$user->email) {
             return response()->json([
@@ -55,7 +55,7 @@ class VerificationController extends Controller
      */
     public function sendPhoneVerification()
     {
-        $user = Auth::user();
+        $user = auth('api')->user();
         
         if (!$user->phone_number) {
             return response()->json([
@@ -94,7 +94,7 @@ class VerificationController extends Controller
             'code' => 'required|string|size:6'
         ]);
 
-        $user = Auth::user();
+        $user = auth('api')->user();
         
         if ($user->email_verified_at) {
             return response()->json([
@@ -106,7 +106,8 @@ class VerificationController extends Controller
         if ($this->verificationService->verifyEmail($user, $request->code)) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Email verified successfully'
+                'message' => 'Email verified successfully',
+                'user' => $user
             ]);
         }
 
@@ -125,7 +126,7 @@ class VerificationController extends Controller
             'code' => 'required|string|size:6'
         ]);
 
-        $user = Auth::user();
+        $user = auth('api')->user();
         
         if ($user->phone_verified_at) {
             return response()->json([
@@ -137,7 +138,8 @@ class VerificationController extends Controller
         if ($this->verificationService->verifyPhone($user, $request->code)) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'Phone number verified successfully'
+                'message' => 'Phone number verified successfully',
+                'user' => $user
             ]);
         }
 
