@@ -85,13 +85,8 @@ class AuthController extends Controller
             Log::error('Failed to send verification code: ' . $e->getMessage());
         }
 
-<<<<<<< HEAD
-        $token = auth('api')->login($user);
-        $user = $user->fresh(); // Get fresh user data
-=======
 
         $token = $user->createToken("API TOKEN")->plainTextToken;
->>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
 
         $message = 'User created successfully. ';
         if ($request->email) {
@@ -202,6 +197,80 @@ class AuthController extends Controller
         ]);
     }
 
+    // public function login2(Request $request)
+    // {
+    //     // dd('here');
+
+    //     $credentials = $request->validate([
+    //         'email' => 'nullable|string|email|max:255|exists:users,email',
+    //         'phone_number' => 'nullable|string|exists:users,phone_number',
+    //         'password' => 'required|string|min:6',
+    //     ]);
+
+    //     if ($request->email) {
+    //         if (!Auth::attempt($request->only(['email', 'password']))) {
+    //             return response()->json(['message' => 'Invalid email or password'], 401);
+    //         }
+    //     }
+
+    //     if ($request->phone_number) {
+    //         if (!Auth::attempt($request->only(['phone_number', 'password']))) {
+    //             return response()->json(['message' => 'Invalid phone number or password'], 401);
+    //         }
+    //     }
+
+    //     $user = Auth::user();
+    //     $token = $user->createToken("API TOKEN")->plainTextToken;
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Login successful',
+    //         'user' => $user,
+    //         'authorization' => [
+    //             'token' => $token,
+    //             'type' => 'bearer',
+    //         ]
+    //     ]);
+    // }
+
+    public function login2(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'nullable|string|email|max:255|exists:users,email',
+            'phone_number' => 'nullable|string|exists:users,phone_number',
+            'password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+
+        $user = User::where('email', $request->email)
+            ->orWhere('phone_number', $request->phone_number)
+            ->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        $token = $user->createToken('API TOKEN')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'user' => $user,
+            'authorization' => [
+                'token' => $token,
+                'type' => 'bearer',
+            ]
+        ]);
+    }
+
+
+
+
+
     /**
      * Logout user (Invalidate the token).
      *
@@ -215,6 +284,18 @@ class AuthController extends Controller
             'message' => 'Successfully logged out',
         ]);
     }
+
+    public function logout2(Request $request)
+    {
+        // dd('here');
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logged out successfully'
+        ]);
+    }
+
 
     /**
      * Refresh a token.
