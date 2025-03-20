@@ -12,8 +12,9 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('login2', 'login2')->name('login2');
 
     // Protected authentication routes
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', 'logout')->name('logout');
+        Route::post('logout2', 'logout2')->name('logout2');
         Route::post('refresh', 'refresh')->name('refresh');
     });
 
@@ -33,8 +34,8 @@ Route::controller(VerificationController::class)->group(function () {
 });
 
 // Car management routes
-Route::controller(CarController::class)->middleware('auth:api')->group(function () {
-    Route::post('cars', 'register');
+Route::controller(CarController::class)->middleware('auth:sanctum')->group(function () {
+    Route::post('reg', 'register');
     Route::get('cars', 'getMyCars');
     Route::get('cars/{id}', 'show');
     Route::put('cars/{id}', 'update');
