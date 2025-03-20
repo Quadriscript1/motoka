@@ -85,13 +85,8 @@ class AuthController extends Controller
             Log::error('Failed to send verification code: ' . $e->getMessage());
         }
 
-<<<<<<< HEAD
-        $token = auth('api')->login($user);
-        $user = $user->fresh(); // Get fresh user data
-=======
 
         $token = $user->createToken("API TOKEN")->plainTextToken;
->>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
 
         $message = 'User created successfully. ';
         if ($request->email) {
@@ -201,6 +196,54 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    public function login2(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'nullable|string|email|max:255|exists:users,email',
+            'phone_number' => 'nullable|string|exists:users,phone_number',
+            'password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        if ($request->email && !is_null($request->email)) {
+            $user = User::where('email', $request->email)->first();
+
+            if (!Auth::attempt($request->only(['email', 'password']))) {
+                return response([
+                    "status" => false,
+                    "message" => "Email & Password do not match our records"
+                ], 404);
+            }
+        }
+
+        if ($request->phone_number && !is_null($request->phone_number)) {
+            $user = User::where('phone_number', $request->phone_number)->first();
+
+            if (!Auth::attempt($request->only(['phone_number', 'password']))) {
+                return response([
+                    "status" => false,
+                    "message" => "Phone Number & Password do not match our records"
+                ], 404);
+            }
+        }
+
+        $token = $user->createToken("API TOKEN")->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'user' => $user,
+            'authorization' => [
+                'token' => $token,
+                'type' => 'bearer',
+            ]
+        ]);
+    }
+
 
     /**
      * Logout user (Invalidate the token).

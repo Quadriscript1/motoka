@@ -21,13 +21,8 @@ class VerificationController extends Controller
      */
     public function sendEmailVerification()
     {
-<<<<<<< HEAD
         $user = auth('api')->user();
-        
-=======
-        $user = Auth::user();
 
->>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if (!$user->email) {
             return response()->json([
                 'status' => 'error',
@@ -61,13 +56,8 @@ class VerificationController extends Controller
      */
     public function sendPhoneVerification()
     {
-<<<<<<< HEAD
-        $user = auth('api')->user();
-        
-=======
         $user = Auth::user();
 
->>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if (!$user->phone_number) {
             return response()->json([
                 'status' => 'error',
@@ -105,13 +95,8 @@ class VerificationController extends Controller
             'code' => 'required|string|size:6'
         ]);
 
-<<<<<<< HEAD
-        $user = auth('api')->user();
-        
-=======
         $user = Auth::user();
 
->>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if ($user->email_verified_at) {
             return response()->json([
                 'status' => 'error',
@@ -199,13 +184,8 @@ class VerificationController extends Controller
             'code' => 'required|string|size:6'
         ]);
 
-<<<<<<< HEAD
-        $user = auth('api')->user();
-        
-=======
         $user = Auth::user();
 
->>>>>>> 200520d78be60ec797d1b6c4f3fb3b6a1a613a89
         if ($user->phone_verified_at) {
             return response()->json([
                 'status' => 'error',
