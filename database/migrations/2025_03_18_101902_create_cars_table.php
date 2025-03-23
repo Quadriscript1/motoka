@@ -19,6 +19,13 @@ return new class extends Migration
             $table->string('vehicle_make');
             $table->string('vehicle_model');
             $table->enum('registration_status', ['registered', 'unregistered'])->default('unregistered');
+            $table->string('chasis_no')->nullable();
+            $table->string('engine_no')->nullable();
+            $table->string('vehicle_year')->nullable();
+            $table->string('vehicle_color')->nullable();
+            $table->string('registration_no')->nullable();
+            $table->string('date_issued')->nullable();
+            $table->string('expiry_date')->nullable();
             $table->json('document_images')->nullable();
             $table->enum('status', ['active', 'pending', 'rejected'])->default('pending');
             $table->timestamps();
@@ -26,7 +33,7 @@ return new class extends Migration
         });
     }
 
-    /**
+    /**registration_no
      * Reverse the migrations.
      */
     public function down(): void

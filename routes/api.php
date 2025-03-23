@@ -26,11 +26,9 @@ Route::controller(AuthController::class)->group(function () {
 // Verification routes
 Route::controller(VerificationController::class)->group(function () {
     Route::post('email/verify/send', 'sendEmailVerification');
-    Route::post('email/verify', 'verifyEmail');
-    Route::post('email/verify2', 'verifyEmail2');
-    Route::post('phone/verify2', 'verifyPhone2');
+    Route::post('user/verify', 'verifyUser');
     Route::post('phone/verify/send', 'sendPhoneVerification');
-    Route::post('phone/verify', 'verifyPhone');
+    
 });
 
 // Car management routes
