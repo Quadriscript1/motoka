@@ -13,12 +13,25 @@ class Car extends Model
     protected $fillable = [
         'user_id',
         'name_of_owner',
+        'phone_number',
         'address',
         'vehicle_make',
         'vehicle_model',
-        'registration_status', // registered or unregistered
-        'document_images',     // JSON array of image paths
-        'status',             // active, pending, rejected
+        'registration_status',    // registered or unregistered
+        'registration_no',       // for registered cars
+        'chasis_no',            // required for both
+        'engine_no',            // required for both
+        'date_issued',          // for registered cars
+        'expiry_date',          // for registered cars
+        'document_images',       // JSON array of image paths for registered cars
+        'vehicle_year',
+        'vehicle_color',
+        'status',               // active, pending, rejected
+    ];
+
+    protected $dates = [
+        'date_issued',
+        'expiry_date'
     ];
 
     protected $casts = [

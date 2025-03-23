@@ -24,14 +24,35 @@ class CarController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Base validation rules for both registered and unregistered cars
+        $baseRules = [
             'name_of_owner' => 'required|string|max:255',
+            'phone_number' => 'required|string',
             'address' => 'required|string',
             'vehicle_make' => 'required|string|max:255',
             'vehicle_model' => 'required|string|max:255',
             'registration_status' => 'required|in:registered,unregistered',
-            'document_images.*' => 'required_if:registration_status,registered|image|mimes:jpeg,png,jpg|max:2048'
-        ]);
+            'chasis_no' => 'required|string',
+            'engine_no' => 'required|string',
+            'vehicle_year' => 'required|integer|digits:4|min:1900|max:' . (date('Y') + 1),
+            'vehicle_color' => 'required|string|max:50'
+        ];
+
+        // Additional rules for registered cars
+        $registeredRules = [
+            'registration_no' => 'required|string',
+            'date_issued' => 'required|date',
+            'expiry_date' => 'required|date|after:date_issued',
+            'document_images.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ];
+
+        // Apply validation rules based on registration status
+        $rules = $baseRules;
+        if ($request->registration_status === 'registered') {
+            $rules = array_merge($baseRules, $registeredRules);
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json([
@@ -51,16 +72,32 @@ class CarController extends Controller
         }
 
         try {
-            $car = Car::create([
+            $carData = [
                 'user_id' => auth('api')->id(),
                 'name_of_owner' => $request->name_of_owner,
+                'phone_number' => $request->phone_number,
                 'address' => $request->address,
                 'vehicle_make' => $request->vehicle_make,
                 'vehicle_model' => $request->vehicle_model,
                 'registration_status' => $request->registration_status,
-                'document_images' => $documentImages,
+                'chasis_no' => $request->chasis_no,
+                'engine_no' => $request->engine_no,
+                'vehicle_year' => $request->vehicle_year,
+                'vehicle_color' => $request->vehicle_color,
                 'status' => $request->registration_status === 'registered' ? 'pending' : 'active'
-            ]);
+            ];
+
+            // Add registered car specific fields
+            if ($request->registration_status === 'registered') {
+                $carData = array_merge($carData, [
+                    'registration_no' => $request->registration_no,
+                    'date_issued' => $request->date_issued,
+                    'expiry_date' => $request->expiry_date,
+                    'document_images' => $documentImages,
+                ]);
+            }
+
+            $car = Car::create($carData);
 
             return response()->json([
                 'status' => 'success',

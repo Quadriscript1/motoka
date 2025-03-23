@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Mail\SendEmailVerification;
+use App\Http\Controllers\VerificationController;
+//use App\Mail\SendEmailVerification;
 use App\Mail\SendPhoneVerification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -17,11 +18,11 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    protected $verificationService;
+    protected $verificationController;
 
-    public function __construct(VerificationService $verificationService)
+    public function __construct(VerificationController $verificationController)
     {
-        $this->verificationService = $verificationService;
+        $this->verificationController = $verificationController;
     }
     /**
      * Create a new user.
@@ -57,29 +58,16 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Send verification code based on registration method
+        // Send verification code using VerificationController
         try {
+            $verificationRequest = new Request();
             if ($request->email) {
-                $code = Str::random(6);
-                $user->email_verification_code = $code;
-
-                if ($user->save()) {
-                    Mail::to($request->email)->queue(new SendEmailVerification($user, $code));
-                }
-
-                // $this->verificationService->sendEmailVerification($user);
+                $verificationRequest->merge(['email' => $request->email]);
             }
             if ($request->phone_number) {
-
-                $code = rand(100000, 999999);
-                $user->phone_verification_code = $code;
-
-                if ($user->save()) {
-                    Mail::to($request->email)->queue(new SendPhoneVerification($user, $code));
-                }
-
-                // $this->verificationService->sendPhoneVerification($user);
+                $verificationRequest->merge(['phone_number' => $request->phone_number]);
             }
+            $this->verificationController->sendVerification($verificationRequest);
         } catch (\Exception $e) {
             // Log the error but don't stop the registration process
             Log::error('Failed to send verification code: ' . $e->getMessage());
@@ -113,125 +101,6 @@ class AuthController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'login' => 'required|string', // This can be either email or phone
-            'password' => 'required|string|min:6',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        // Check if login is email or phone number
-        $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone_number';
-        $credentials = [
-            $loginField => $request->login,
-            'password' => $request->password
-        ];
-
-        // if (!Auth::attempt($credentials)) {
-        //     return response([
-        //         "status" => false,
-        //         "message" => "Email & Password does not match with our record"
-        //     ], 404);
-        // }
-        // $token = $user->createToken("API TOKEN")->plainTextToken;
-
-        if (!$token = auth('api')->attempt($credentials)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid credentials',
-            ], 401);
-        }
-
-        $user = auth('api')->user();
-
-        if (!$user) {
-            auth('api')->logout();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found',
-            ], 401);
-        }
-
-        // Check if user needs to verify their credentials
-        $verificationNeeded = [];
-        if ($loginField === 'email' && !$user->email_verified_at) {
-            $verificationNeeded[] = 'email';
-        } elseif ($loginField === 'phone_number' && !$user->phone_verified_at) {
-            $verificationNeeded[] = 'phone';
-        }
-
-        if (!empty($verificationNeeded)) {
-            // Send new verification code
-            try {
-                if (in_array('email', $verificationNeeded)) {
-                    $this->verificationService->sendEmailVerification($user);
-                } elseif (in_array('phone', $verificationNeeded)) {
-                    $this->verificationService->sendPhoneVerification($user);
-                }
-            } catch (\Exception $e) {
-                Log::error('Failed to send verification code: ' . $e->getMessage());
-            }
-
-            return response()->json([
-                'status' => 'verification_required',
-                'message' => 'Please verify your ' . implode(' and ', $verificationNeeded) . ' first',
-                'verification_needed' => $verificationNeeded,
-                'authorization' => [
-                    'token' => $token,
-                    'type' => 'bearer',
-                ]
-            ], 403);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'user' => $user,
-            'authorization' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ]);
-    }
-
-    // public function login2(Request $request)
-    // {
-    //     // dd('here');
-
-    //     $credentials = $request->validate([
-    //         'email' => 'nullable|string|email|max:255|exists:users,email',
-    //         'phone_number' => 'nullable|string|exists:users,phone_number',
-    //         'password' => 'required|string|min:6',
-    //     ]);
-
-    //     if ($request->email) {
-    //         if (!Auth::attempt($request->only(['email', 'password']))) {
-    //             return response()->json(['message' => 'Invalid email or password'], 401);
-    //         }
-    //     }
-
-    //     if ($request->phone_number) {
-    //         if (!Auth::attempt($request->only(['phone_number', 'password']))) {
-    //             return response()->json(['message' => 'Invalid phone number or password'], 401);
-    //         }
-    //     }
-
-    //     $user = Auth::user();
-    //     $token = $user->createToken("API TOKEN")->plainTextToken;
-
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'message' => 'Login successful',
-    //         'user' => $user,
-    //         'authorization' => [
-    //             'token' => $token,
-    //             'type' => 'bearer',
-    //         ]
-    //     ]);
-    // }
 
     public function login2(Request $request)
     {
@@ -246,9 +115,17 @@ class AuthController extends Controller
         }
 
 
-        $user = User::where('email', $request->email)
-            ->orWhere('phone_number', $request->phone_number)
-            ->first();
+        $user = User::query();
+
+        if (!is_null($request->email)) {
+           $user=  $user->where('email', $request->email);
+        }
+        if (!is_null($request->phone_number)) {
+            $user = $user->where('phone_number', $request->phone_number);
+        }
+        
+       
+           $user = $user->first();
 
         if (!$user) {
             return response()->json(['message' => 'Invalid credentials'], 401);
