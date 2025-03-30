@@ -10,24 +10,26 @@ class Car extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
-        'user_id',
-        'name_of_owner',
-        'phone_number',
-        'address',
-        'vehicle_make',
-        'vehicle_model',
-        'registration_status',    // registered or unregistered
-        'registration_no',       // for registered cars
-        'chasis_no',            // required for both
-        'engine_no',            // required for both
-        'date_issued',          // for registered cars
-        'expiry_date',          // for registered cars
-        'document_images',       // JSON array of image paths for registered cars
-        'vehicle_year',
-        'vehicle_color',
-        'status',               // active, pending, rejected
-    ];
+    // protected $fillable = [
+    //     'user_id',
+    //     'name_of_owner',
+    //     'phone_number',
+    //     'address',
+    //     'vehicle_make',
+    //     'vehicle_model',
+    //     'registration_status',    // registered or unregistered
+    //     'registration_no',       // for registered cars
+    //     'chasis_no',            // required for both
+    //     'engine_no',            // required for both
+    //     'date_issued',          // for registered cars
+    //     'expiry_date',          // for registered cars
+    //     'document_images',       // JSON array of image paths for registered cars
+    //     'vehicle_year',
+    //     'vehicle_color',
+    //     'status',               // active, pending, rejected
+    // ];
+    protected $guarded = [];
+
 
     protected $dates = [
         'date_issued',
