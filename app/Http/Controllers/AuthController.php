@@ -51,12 +51,30 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+         // Check if email or phone number already exists in the database (excluding soft deleted users)
+    $existingUser = User::where(function ($query) use ($request) {
+        if ($request->email) {
+            $query->orWhere('email', $request->email);
+        }
+        if ($request->phone_number) {
+            $query->orWhere('phone_number', $request->phone_number);
+        }
+    })->whereNull('deleted_at')->first();
+
+    if ($existingUser) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Email or phone number is already registered.'
+        ], 422);
+    }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
         ]);
+        
 
         // Send verification code using VerificationController
         try {
@@ -102,47 +120,55 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
 
-    public function login2(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'nullable|string|email|max:255|exists:users,email',
-            'phone_number' => 'nullable|string|exists:users,phone_number',
-            'password' => 'required|string|min:6',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-
-        $user = User::query();
-
-        if (!is_null($request->email)) {
-           $user=  $user->where('email', $request->email);
-        }
-        if (!is_null($request->phone_number)) {
-            $user = $user->where('phone_number', $request->phone_number);
-        }
-        
-       
-           $user = $user->first();
-
-        if (!$user) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        $token = $user->createToken('API TOKEN')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Login successful',
-            'user' => $user,
-            'authorization' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ]);
-    }
+     public function login2(Request $request)
+     {
+         $validator = Validator::make($request->all(), [
+             'email' => 'nullable|string|email|max:255|exists:users,email',
+             'phone_number' => 'nullable|string|exists:users,phone_number',
+             'password' => 'required|string|min:6',
+         ]);
+     
+         if ($validator->fails()) {
+             return response()->json($validator->errors(), 422);
+         }
+     
+         $userQuery = User::query();
+     
+         if ($request->email) {
+             $userQuery->where('email', $request->email);
+         }
+     
+         if ($request->phone_number) {
+             $userQuery->where('phone_number', $request->phone_number);
+         }
+     
+         $user = $userQuery->first();
+     
+         if (!$user || !Hash::check($request->password, $user->password)) {
+             return response()->json(['message' => 'Invalid credentials'], 401);
+         }
+     
+         // **Check if email is verified**
+         if ($request->email && is_null($user->email_verified_at)) {
+             return response()->json([
+                 'status' => 'error',
+                 'message' => 'Please verify your email before logging in.'
+             ], 403);
+         }
+     
+         $token = $user->createToken('API TOKEN')->plainTextToken;
+     
+         return response()->json([
+             'status' => 'success',
+             'message' => 'Login successful',
+             'user' => $user,
+             'authorization' => [
+                 'token' => $token,
+                 'type' => 'bearer',
+             ]
+         ]);
+     }
+     
 
 
 

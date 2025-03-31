@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\DriverLicenseController;
 use Illuminate\Support\Facades\Route;
 
 // Public authentication routes
@@ -32,10 +33,19 @@ Route::controller(VerificationController::class)->group(function () {
 });
 
 // Car management routes
-Route::controller(CarController::class)->middleware('auth:sanctum')->group(function () {
+Route::controller(CarController::class)->group(function () {
     Route::post('reg', 'register');
     Route::get('cars', 'getMyCars');
     Route::get('cars/{id}', 'show');
     Route::put('cars/{id}', 'update');
     Route::delete('cars/{id}', 'destroy');
 });
+
+
+
+Route::prefix('licenses')->group(function () {
+    Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
+    Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
+    Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
+});
+

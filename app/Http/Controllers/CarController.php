@@ -32,18 +32,18 @@ class CarController extends Controller
             'vehicle_make' => 'required|string|max:255',
             'vehicle_model' => 'required|string|max:255',
             'registration_status' => 'required|in:registered,unregistered',
-            'chasis_no' => 'required|string',
-            'engine_no' => 'required|string',
+            'chasis_no' => 'nullable|string|nullable',
+            'engine_no' => 'nullable|string|nullable',
             'vehicle_year' => 'required|integer|digits:4|min:1900|max:' . (date('Y') + 1),
             'vehicle_color' => 'required|string|max:50'
         ];
 
         // Additional rules for registered cars
         $registeredRules = [
-            'registration_no' => 'required|string',
-            'date_issued' => 'required|date',
-            'expiry_date' => 'required|date|after:date_issued',
-            'document_images.*' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'registration_no' => 'nullable|string|nullable',
+            'date_issued' => 'nullable|date|nullable',
+            'expiry_date' => 'nullable|date|after:date_issued|nullable',
+            'document_images.*' => 'nullable |image|mimes:jpeg,png,jpg|max:2048',
         ];
 
         // Apply validation rules based on registration status
@@ -73,7 +73,7 @@ class CarController extends Controller
 
         try {
             $carData = [
-                'user_id' => auth('api')->id(),
+                'user_id' => auth()->user()->id,
                 'name_of_owner' => $request->name_of_owner,
                 'phone_number' => $request->phone_number,
                 'address' => $request->address,
@@ -123,8 +123,8 @@ class CarController extends Controller
      */
     public function getMyCars()
     {
-        $cars = Car::where('user_id', auth('api')->id())
-            ->orderBy('created_at', 'desc')
+        $cars = Car::where('user_id', auth()->user()->id)
+            ->orderBy('created_at', 'asc')
             ->get();
 
         return response()->json([
@@ -138,7 +138,7 @@ class CarController extends Controller
      */
     public function show($id)
     {
-        $car = Car::where('user_id', auth('api')->id())
+        $car = Car::where('user_id', auth()->user()->id)
             ->findOrFail($id);
 
         return response()->json([
@@ -152,7 +152,7 @@ class CarController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $car = Car::where('user_id', auth('api')->id())
+        $car = Car::where('user_id', auth()->user()->id)
             ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -202,7 +202,7 @@ class CarController extends Controller
      */
     public function destroy($id)
     {
-        $car = Car::where('user_id', auth('api')->id())
+        $car = Car::where('user_id', auth()->user()->id)
             ->findOrFail($id);
 
         // Delete associated documents
