@@ -104,7 +104,6 @@ class CarController extends Controller
                 'message' => 'Car registered successfully',
                 'car' => $car
             ]);
-
         } catch (\Exception $e) {
             // Clean up uploaded files if car creation fails
             foreach ($documentImages as $path) {
@@ -125,8 +124,8 @@ class CarController extends Controller
     public function getMyCars()
     {
         $cars = Car::where('user_id', auth()->user()->id)
-                   ->orderBy('created_at', 'asc')
-                   ->get();
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return response()->json([
             'status' => 'success',
@@ -140,7 +139,7 @@ class CarController extends Controller
     public function show($id)
     {
         $car = Car::where('user_id', auth()->user()->id)
-                  ->findOrFail($id);
+            ->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -154,7 +153,7 @@ class CarController extends Controller
     public function update(Request $request, $id)
     {
         $car = Car::where('user_id', auth()->user()->id)
-                  ->findOrFail($id);
+            ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'name_of_owner' => 'sometimes|string|max:255',
@@ -175,12 +174,12 @@ class CarController extends Controller
         // Handle new document images
         if ($request->hasFile('document_images')) {
             $documentImages = $car->document_images ?? [];
-            
+
             foreach ($request->file('document_images') as $image) {
                 $path = $image->store('car-documents', 'public');
                 $documentImages[] = $path;
             }
-            
+
             $car->document_images = $documentImages;
         }
 
@@ -204,7 +203,7 @@ class CarController extends Controller
     public function destroy($id)
     {
         $car = Car::where('user_id', auth()->user()->id)
-                  ->findOrFail($id);
+            ->findOrFail($id);
 
         // Delete associated documents
         if (!empty($car->document_images)) {
