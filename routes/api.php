@@ -17,6 +17,13 @@ Route::controller(AuthController::class)->group(function () {
         Route::post('logout', 'logout')->name('logout');
         Route::post('logout2', 'logout2')->name('logout2');
         Route::post('refresh', 'refresh')->name('refresh');
+
+
+        Route::prefix('licenses')->group(function () {
+            Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
+            Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
+            Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
+        });
     });
 
     // Social authentication routes
@@ -29,7 +36,6 @@ Route::controller(VerificationController::class)->group(function () {
     Route::post('email/verify/send', 'sendEmailVerification');
     Route::post('user/verify', 'verifyUser');
     Route::post('phone/verify/send', 'sendPhoneVerification');
-    
 });
 
 // Car management routes
@@ -43,9 +49,8 @@ Route::controller(CarController::class)->group(function () {
 
 
 
-Route::prefix('licenses')->group(function () {
-    Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
-    Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
-    Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
-});
-
+// Route::prefix('licenses')->group(function () {
+//     Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
+//     Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
+//     Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
+// });
