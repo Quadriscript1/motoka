@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
                 'user_type_id' => 1,
                 'email' => "dev@motoka.net",
                 'phone_number' => "08169453935",
-                'full_name' => 'Super Admin',
+                'name' => 'Super Admin',
                 'image' =>
                 "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyudBxqf1sdD2e3L4nI3nqsMt1_tceOyuZ7A&usqp=CAU",
                 'password' => bcrypt('12345'),
