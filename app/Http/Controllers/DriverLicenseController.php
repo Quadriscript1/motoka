@@ -10,7 +10,7 @@ class DriverLicenseController extends Controller
 {
     public function store(Request $request)
     {
-        // dd($request->all());
+         //dd($request->all(),auth()->user()->id);
         $request->validate([
             'full_name' => 'required|string|max:255',
             'phone_no' => 'required|string|max:15',
@@ -34,6 +34,7 @@ class DriverLicenseController extends Controller
             'passport_photo' => $passportPath,
             'is_registered' => true
         ]);
+        return $license;
 
         return response()->json([
             'message' => 'Driver License application submitted successfully!',
