@@ -35,7 +35,9 @@ return new class extends Migration
             $table->string('social_type')->nullable();
             $table->string('social_avatar')->nullable();
             $table->string('email_verification_code')->nullable();
+            $table->timestamp('email_verification_code_expires_at')->nullable();
             $table->string('phone_verification_code')->nullable();
+            $table->timestamp('phone_verification_code_expires_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
@@ -62,6 +64,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('user_types');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
