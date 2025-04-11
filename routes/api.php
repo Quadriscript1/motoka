@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\DriverLicenseController;
+use App\Http\Controllers\PlateController;
 use Illuminate\Support\Facades\Route;
 
 // Public authentication routes
@@ -49,3 +50,8 @@ Route::prefix('licenses')->group(function () {
     Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
 });
 
+
+Route::controller( PlateController::class)->group(function(){
+    
+    Route::post('/apply', [PlateController::class,'store']); 
+});
