@@ -61,7 +61,20 @@ class CarController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-
+        $existingCar = Car::where(function ($query) use ($request) {
+            if ($request->registration_status === 'registered') {
+                $query->where('registration_no', $request->registration_no);
+            }
+            $query->orWhere('chasis_no', $request->chasis_no)
+                  ->orWhere('engine_no', $request->engine_no);
+        })->first();
+    
+        if ($existingCar) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'A car with the same registration number, chassis number, or engine number already exists.',
+            ], 409); // Conflict status code
+        }
         // Handle document images upload
         $documentImages = [];
         if ($request->hasFile('document_images')) {
