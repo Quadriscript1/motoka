@@ -6,8 +6,11 @@ use App\Models\DriverLicense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class DriverLicenseController extends Controller {
-    public function store(Request $request) {
+class DriverLicenseController extends Controller
+{
+    public function store(Request $request)
+    {
+         //dd($request->all(),auth()->user()->id);
         $request->validate([
             'license_number' => 'nullable|unique:licenses',
             'license_type' => 'nullable',
@@ -32,8 +35,8 @@ class DriverLicenseController extends Controller {
         ]);
         
 
-        $passportPath = $request->file('passport_photo') 
-            ? $request->file('passport_photo')->store('passports', 'public') 
+        $passportPath = $request->file('passport_photo')
+            ? $request->file('passport_photo')->store('passports', 'public')
             : null;
 
         $license = DriverLicense::create([
@@ -60,6 +63,7 @@ class DriverLicenseController extends Controller {
             'passport_photo' => $passportPath
             
         ]);
+        return $license;
 
         return response()->json([
             'message' => 'Driver License application submitted successfully!',
@@ -67,13 +71,14 @@ class DriverLicenseController extends Controller {
         ], 201);
     }
 
-    public function index() {
+    public function index()
+    {
         return response()->json(DriverLicense::all());
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         $license = DriverLicense::findOrFail($id);
         return response()->json($license);
     }
 }
-
