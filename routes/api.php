@@ -25,6 +25,12 @@ Route::controller(AuthController::class)->group(function () {
             Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
             Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
         });
+
+        Route::prefix('plate-number')->group(function () {
+            Route::post('/apply', [PlateController::class, 'store']); // Apply for license
+            Route::get('/', [PlateController::class, 'index']);       // List all licenses
+            Route::get('/{id}', [PlateController::class, 'show']);    // Get a single license
+        });
     });
 
     // Social authentication routes
@@ -35,6 +41,7 @@ Route::controller(AuthController::class)->group(function () {
 // Verification routes
 Route::controller(VerificationController::class)->group(function () {
     Route::post('email/verify/send', 'sendEmailVerification');
+    Route::post('email/verify/resend', 'resendEmailVerification');
     Route::post('user/verify', 'verifyUser');
     Route::post('phone/verify/send', 'sendPhoneVerification');
 });
@@ -50,22 +57,8 @@ Route::controller(CarController::class)->group(function () {
 
 
 
-<<<<<<< HEAD
-Route::prefix('licenses')->group(function () {
-    Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
-    Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
-    Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
-});
-
-
-Route::controller( PlateController::class)->group(function(){
-    
-    Route::post('/apply', [PlateController::class,'store']); 
-});
-=======
 // Route::prefix('licenses')->group(function () {
 //     Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
 //     Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
 //     Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
 // });
->>>>>>> main
