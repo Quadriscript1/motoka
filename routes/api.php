@@ -5,6 +5,7 @@ use App\Http\Controllers\CarController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Public authentication routes
@@ -30,6 +31,13 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('/apply', [PlateController::class, 'store']); // Apply for license
             Route::get('/', [PlateController::class, 'index']);       // List all licenses
             Route::get('/{id}', [PlateController::class, 'show']);    // Get a single license
+        });
+
+
+        Route::prefix('profile')->group(function () {
+            Route::get('/', [ProfileController::class, 'show']);       // Get profile
+            Route::put('/', [ProfileController::class, 'update']);     // Update profile
+            Route::put('/change-password', [ProfileController::class, 'changePassword']);
         });
     });
 
