@@ -53,6 +53,9 @@ Route::controller(CarController::class)->group(function () {
     Route::get('cars/{id}', 'show');
     Route::put('cars/{id}', 'update');
     Route::delete('cars/{id}', 'destroy');
+    Route::post('initiate', 'InsertDetail');
+    Route::post('verify', 'Verification');
+    
 });
 
 

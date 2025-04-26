@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use App\Models\Transaction;
 
 class CarController extends Controller
 {
@@ -231,5 +233,79 @@ class CarController extends Controller
             'status' => 'success',
             'message' => 'Car deleted successfully'
         ]);
+    }
+
+    public function InsertDetail(Request $request)
+    {
+       
+                $url = "https://api.paystack.co/transaction/initialize";
+                $fields = [
+                    'email' => "customer@email.com",
+                    'amount' => "500000"
+                  ];
+
+                  $fields_string = http_build_query($fields);
+
+                  $ch = curl_init();
+                  $SECRET_KEY = 'sk_test_ed10add7e4f28be7fc2620d55909e970d4835dbb';
+                  
+                  curl_setopt($ch,CURLOPT_URL, $url);
+                  curl_setopt($ch,CURLOPT_POST, true);
+                  curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+                  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    "Authorization: Bearer " . $SECRET_KEY,
+                    "Cache-Control: no-cache",
+                  ));
+                  
+                  curl_setopt($ch,CURLOPT_RETURNTRANSFER, true); 
+                  
+                  $result = curl_exec($ch);
+                  echo $result;
+    }
+    public function Verification()
+    {
+        $transaction_id = 'b9evi3r18a'; // You can also pass this dynamically
+    
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('PAYSTACK_PRIVATE_KEY'),
+            'Content-Type' => 'application/json',
+            'Cache-Control' => 'no-cache',
+        ])->get("https://api.paystack.co/transaction/verify/{$transaction_id}");
+    
+        $result = $response->json();
+    
+        if (isset($result['data']['status'])) {
+            $status = $result['data']['status'];
+    
+            if ($status == 'success') {
+                Transaction::where('user_id', Auth::id())
+                    ->where('transaction_id', $transaction_id)
+                    ->update(['status' => 'approved']);
+            } elseif ($result['status'] == false) {
+                Transaction::where('user_id', Auth::id())
+                    ->where('transaction_id', $transaction_id)
+                    ->update(['status' => 'pending']);
+            } else {
+                Transaction::where('user_id', Auth::id())
+                    ->where('transaction_id', $transaction_id)
+                    ->update(['status' => 'failed']);
+            }
+    
+            // Always update raw response
+            Transaction::where('user_id', Auth::id())
+                ->where('transaction_id', $transaction_id)
+                ->update([
+                    'raw_response' => json_encode($result)
+                ]);
+    
+            // If successful and transaction record updated
+            $success = Transaction::where('user_id', Auth::id())
+                ->where('transaction_id', $transaction_id)
+                ->first('status');
+    
+            return $success;
+        }
+    
+        return response()->json(['message' => 'Unable to verify transaction'], 400);
     }
 }
