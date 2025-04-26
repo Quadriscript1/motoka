@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class ProfileController extends Controller
 {
@@ -70,6 +71,42 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Password changed successfully',
+            // 'data' => null
+        ]);
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        // Confirm deletion by requiring password re-entry
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password is incorrect',
+                // 'data' => null
+            ], 400);
+        }
+
+        // Check for dependencies (e.g., posts, comments)
+        // Example: if ($user->posts()->exists()) { ... }
+
+        // Log the deletion
+        \Log::info('User account deleted', ['user_id' => $user->id]);
+
+        // Notify the user (e.g., send an email)
+        // Mail::to($user->email)->send(new AccountDeletedMail());
+
+        // Delete the user
+        $user->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account deleted successfully',
             // 'data' => null
         ]);
     }

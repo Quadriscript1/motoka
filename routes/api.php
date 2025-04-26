@@ -34,10 +34,11 @@ Route::controller(AuthController::class)->group(function () {
         });
 
 
-        Route::prefix('profile')->group(function () {
-            Route::get('/', [ProfileController::class, 'show']);       // Get profile
-            Route::put('/', [ProfileController::class, 'update']);     // Update profile
+        Route::prefix('settings')->group(function () {
+            Route::get('/profile', [ProfileController::class, 'show']);       // Get profile
+            Route::put('/profile', [ProfileController::class, 'update']);     // Update profile
             Route::put('/change-password', [ProfileController::class, 'changePassword']);
+            Route::delete('/delete-account', [ProfileController::class, 'deleteAccount']);
         });
     });
 
