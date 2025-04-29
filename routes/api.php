@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarController;
+use App\Http\Controllers\CarTypeController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
@@ -40,6 +41,7 @@ Route::controller(AuthController::class)->group(function () {
             Route::put('/change-password', [ProfileController::class, 'changePassword']);
             Route::delete('/delete-account', [ProfileController::class, 'deleteAccount']);
         });
+        Route::get('/car-types', [CarTypeController::class, 'index']);
     });
 
     // Social authentication routes
