@@ -34,15 +34,15 @@ class CarController extends Controller
             'vehicle_make' => 'required|string|max:255',
             'vehicle_model' => 'required|string|max:255',
             'registration_status' => 'required|in:registered,unregistered',
-            'chasis_no' => 'nullable|string|nullable',
-            'engine_no' => 'nullable|string|nullable',
+            'chasis_no' => 'nullable|string',
+            'engine_no' => 'nullable|string',
             'vehicle_year' => 'required|integer|digits:4|min:1900|max:' . (date('Y') + 1),
             'vehicle_color' => 'required|string|max:50'
         ];
 
         // Additional rules for registered cars
         $registeredRules = [
-            'registration_no' => 'nullable|string|nullable',
+            'registration_no' => 'nullable|string',
             'date_issued' => 'nullable|date|nullable',
             'expiry_date' => 'nullable|date|after:date_issued|nullable',
             'document_images.*' => 'nullable |image|mimes:jpeg,png,jpg|max:2048',
@@ -63,20 +63,36 @@ class CarController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $existingCar = Car::where(function ($query) use ($request) {
-            if ($request->registration_status === 'registered') {
-                $query->where('registration_no', $request->registration_no);
+        // $existingCar = Car::where(function ($query) use ($request) {
+        //     if ($request->registration_status === 'registered') {
+        //         $query->where('registration_no', $request->registration_no);
+        //     }
+        //     $query->orWhere('chasis_no', $request->chasis_no)
+        //           ->orWhere('engine_no', $request->engine_no);
+        // })->first();
+        // $existingCar = Car::query();
+        $userId= Auth::user()->id;
+
+        if ($request->registration_status === 'registered') {
+            $existingCar = Car::where('user_id', $userId)->get();
+            foreach ($existingCar as $key => $car) {
+                if ($car->registration_no == $request->registration_no || $car->chasis_no == $request->chasis_no || $car->engine_no == $request->engine_no) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'A car with the same details already exists.',
+                    ]);
+                }
             }
-            $query->orWhere('chasis_no', $request->chasis_no)
-                  ->orWhere('engine_no', $request->engine_no);
-        })->first();
-    
-        if ($existingCar) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'A car with the same registration number, chassis number, or engine number already exists.',
-            ], 409); // Conflict status code
         }
+        // $existingCar = $existingCar->first();
+
+    
+        // if ($existingCar) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'A car with the same registration number, chassis number, or engine number already exists.',
+        //     ], 409); // Conflict status code
+        // }
         // Handle document images upload
         $documentImages = [];
         if ($request->hasFile('document_images')) {
@@ -86,9 +102,10 @@ class CarController extends Controller
             }
         }
 
+        $user_id = Auth::user()->id;
         try {
             $carData = [
-                'user_id' => auth()->user()->id,
+                'user_id' => $user_id,
                 'name_of_owner' => $request->name_of_owner,
                 'phone_number' => $request->phone_number,
                 'address' => $request->address,
@@ -99,7 +116,7 @@ class CarController extends Controller
                 'engine_no' => $request->engine_no,
                 'vehicle_year' => $request->vehicle_year,
                 'vehicle_color' => $request->vehicle_color,
-                'status' => $request->registration_status === 'registered' ? 'pending' : 'active'
+                'status' => $request->registration_status === 'registered' ? 'active' : 'pending'
             ];
 
             // Add registered car specific fields
@@ -136,9 +153,9 @@ class CarController extends Controller
     /**
      * Get user's cars
      */
-    public function getMyCars()
+    public function getMyCars($user_id)
     {
-        $cars = Car::where('user_id', auth()->user()->id)
+        $cars = Car::where('user_id', $user_id)
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -151,9 +168,9 @@ class CarController extends Controller
     /**
      * Get specific car details
      */
-    public function show($id)
+    public function show($id,$user_id)
     {
-        $car = Car::where('user_id', auth()->user()->id)
+        $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
         return response()->json([
@@ -165,9 +182,9 @@ class CarController extends Controller
     /**
      * Update car details
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id,$user_id)
     {
-        $car = Car::where('user_id', auth()->user()->id)
+        $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -215,9 +232,9 @@ class CarController extends Controller
     /**
      * Delete a car
      */
-    public function destroy($id)
+    public function destroy($id,$user_id)
     {
-        $car = Car::where('user_id', auth()->user()->id)
+        $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
         // Delete associated documents

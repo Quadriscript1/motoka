@@ -39,6 +39,16 @@ Route::controller(AuthController::class)->group(function () {
             Route::put('/', [ProfileController::class, 'update']);     // Update profile
             Route::put('/change-password', [ProfileController::class, 'changePassword']);
         });
+
+        Route::prefix('car')->group(function () {
+            Route::post('reg', [CarController::class, 'register']);      
+            Route::get('cars/{user_id}', [CarController::class, 'getMyCars']);
+            Route::get('cars/{id}/{user_id}', [CarController::class, 'show']);
+            Route::put('cars/{id}/{user_id}', [CarController::class, 'update']);
+            Route::delete('cars/{id}/{user_id}', [CarController::class, 'destroy']);
+            Route::post('initiate', [CarController::class, 'InsertDetail']);
+            Route::post('verify', [CarController::class, 'Verification']);
+        });
     });
 
     // Social authentication routes
@@ -47,24 +57,30 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 // Verification routes
-Route::controller(VerificationController::class)->group(function () {
-    Route::post('email/verify/send', 'sendEmailVerification');
-    Route::post('email/verify/resend', 'resendEmailVerification');
-    Route::post('user/verify', 'verifyUser');
-    Route::post('phone/verify/send', 'sendPhoneVerification');
+// Route::controller(VerificationController::class)->group(function () {
+//     Route::post('email/verify/send', 'sendEmailVerification');
+//     Route::post('email/verify/resend', 'resendEmailVerification');
+//     Route::post('user/verify', 'verifyUser');
+//     Route::post('phone/verify/send', 'sendPhoneVerification');
+// });
+
+Route::prefix('verify ')->group(function () {
+    Route::post('email/verify/send', [VerificationController::class, 'sendVerification']);      
+    Route::post('email/verify/resend', [VerificationController::class, 'resendEmailVerification']);   
+    Route::post('user/verify', [VerificationController::class, 'verifyUser']);
 });
 
 // Car management routes
-Route::controller(CarController::class)->group(function () {
-    Route::post('reg', 'register');
-    Route::get('cars', 'getMyCars');
-    Route::get('cars/{id}', 'show');
-    Route::put('cars/{id}', 'update');
-    Route::delete('cars/{id}', 'destroy');
-    Route::post('initiate', 'InsertDetail');
-    Route::post('verify', 'Verification');
+// Route::controller(CarController::class)->group(function () {
+//     Route::post('reg', 'register');
+//     Route::get('cars', 'getMyCars');
+//     Route::get('cars/{id}', 'show');
+//     Route::put('cars/{id}', 'update');
+//     Route::delete('cars/{id}', 'destroy');
+//     Route::post('initiate', 'InsertDetail');
+//     Route::post('verify', 'Verification');
     
-});
+// });
 
 
 
