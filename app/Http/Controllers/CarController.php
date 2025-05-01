@@ -153,8 +153,9 @@ class CarController extends Controller
     /**
      * Get user's cars
      */
-    public function getMyCars($user_id)
+    public function getMyCars()
     {
+        $user_id = Auth::user()->id;
         $cars = Car::where('user_id', $user_id)
             ->orderBy('created_at', 'asc')
             ->get();
@@ -168,8 +169,9 @@ class CarController extends Controller
     /**
      * Get specific car details
      */
-    public function show($id,$user_id)
-    {
+    public function show($id)
+    {  
+         $user_id = Auth::user()->id;
         $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
@@ -182,8 +184,9 @@ class CarController extends Controller
     /**
      * Update car details
      */
-    public function update(Request $request, $id,$user_id)
+    public function update(Request $request,$id)
     {
+        $user_id = Auth::user()->id;
         $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
@@ -232,8 +235,9 @@ class CarController extends Controller
     /**
      * Delete a car
      */
-    public function destroy($id,$user_id)
+    public function destroy($id)
     {
+        $user_id = Auth::user()->id;
         $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 

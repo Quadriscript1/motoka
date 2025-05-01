@@ -45,10 +45,10 @@ Route::controller(AuthController::class)->group(function () {
 
         Route::prefix('car')->group(function () {
             Route::post('reg', [CarController::class, 'register']);      
-            Route::get('cars/{user_id}', [CarController::class, 'getMyCars']);
-            Route::get('cars/{id}/{user_id}', [CarController::class, 'show']);
-            Route::put('cars/{id}/{user_id}', [CarController::class, 'update']);
-            Route::delete('cars/{id}/{user_id}', [CarController::class, 'destroy']);
+            Route::get('get-cars/', [CarController::class, 'getMyCars']);
+            Route::get('cars/{id}', [CarController::class, 'show']);
+            Route::put('cars/{id}', [CarController::class, 'update']);
+            Route::delete('cars/{id}', [CarController::class, 'destroy']);
             Route::post('initiate', [CarController::class, 'InsertDetail']);
             Route::post('verify', [CarController::class, 'Verification']);
         });
@@ -70,7 +70,7 @@ Route::controller(AuthController::class)->group(function () {
 //     Route::post('phone/verify/send', 'sendPhoneVerification');
 // });
 
-Route::prefix('verify ')->group(function () {
+Route::prefix('verify')->group(function () {
     Route::post('email/verify/send', [VerificationController::class, 'sendVerification']);      
     Route::post('email/verify/resend', [VerificationController::class, 'resendEmailVerification']);   
     Route::post('user/verify', [VerificationController::class, 'verifyUser']);
