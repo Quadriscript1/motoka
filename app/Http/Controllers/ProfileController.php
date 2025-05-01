@@ -13,10 +13,16 @@ class ProfileController extends Controller
     public function show()
     {
         $user = Auth::user();
+        if ($user) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile retrieved successfully',
+                'data' => $user
+            ]);
+        }
         return response()->json([
-            'success' => true,
-            'message' => 'Profile retrieved successfully',
-            'data' => $user
+            'Status' => false,
+            'message' => 'Profile Not found',
         ]);
     }
 
