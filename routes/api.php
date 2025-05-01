@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarController;
+use App\Http\Controllers\CarTypeController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
@@ -34,11 +35,13 @@ Route::controller(AuthController::class)->group(function () {
         });
 
 
-        Route::prefix('profile')->group(function () {
-            Route::get('/', [ProfileController::class, 'show']);       // Get profile
-            Route::put('/', [ProfileController::class, 'update']);     // Update profile
+        Route::prefix('settings')->group(function () {
+            Route::get('/profile', [ProfileController::class, 'show']);       // Get profile
+            Route::put('/profile', [ProfileController::class, 'update']);     // Update profile
             Route::put('/change-password', [ProfileController::class, 'changePassword']);
+            Route::delete('/delete-account', [ProfileController::class, 'deleteAccount']);
         });
+
 
         Route::prefix('car')->group(function () {
             Route::post('reg', [CarController::class, 'register']);      
@@ -49,6 +52,9 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('initiate', [CarController::class, 'InsertDetail']);
             Route::post('verify', [CarController::class, 'Verification']);
         });
+
+        Route::get('/car-types', [CarTypeController::class, 'index']);
+
     });
 
     // Social authentication routes
