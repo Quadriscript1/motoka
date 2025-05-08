@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use App\Models\Transaction;
 
 class CarController extends Controller
 {
@@ -32,15 +34,15 @@ class CarController extends Controller
             'vehicle_make' => 'required|string|max:255',
             'vehicle_model' => 'required|string|max:255',
             'registration_status' => 'required|in:registered,unregistered',
-            'chasis_no' => 'nullable|string|nullable',
-            'engine_no' => 'nullable|string|nullable',
+            'chasis_no' => 'nullable|string',
+            'engine_no' => 'nullable|string',
             'vehicle_year' => 'required|integer|digits:4|min:1900|max:' . (date('Y') + 1),
             'vehicle_color' => 'required|string|max:50'
         ];
 
         // Additional rules for registered cars
         $registeredRules = [
-            'registration_no' => 'nullable|string|nullable',
+            'registration_no' => 'nullable|string',
             'date_issued' => 'nullable|date|nullable',
             'expiry_date' => 'nullable|date|after:date_issued|nullable',
             'document_images.*' => 'nullable |image|mimes:jpeg,png,jpg|max:2048',
@@ -61,20 +63,36 @@ class CarController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $existingCar = Car::where(function ($query) use ($request) {
-            if ($request->registration_status === 'registered') {
-                $query->where('registration_no', $request->registration_no);
+        // $existingCar = Car::where(function ($query) use ($request) {
+        //     if ($request->registration_status === 'registered') {
+        //         $query->where('registration_no', $request->registration_no);
+        //     }
+        //     $query->orWhere('chasis_no', $request->chasis_no)
+        //           ->orWhere('engine_no', $request->engine_no);
+        // })->first();
+        // $existingCar = Car::query();
+        $userId= Auth::user()->id;
+
+        if ($request->registration_status === 'registered') {
+            $existingCar = Car::where('user_id', $userId)->get();
+            foreach ($existingCar as $key => $car) {
+                if ($car->registration_no == $request->registration_no || $car->chasis_no == $request->chasis_no || $car->engine_no == $request->engine_no) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'A car with the same details already exists.',
+                    ]);
+                }
             }
-            $query->orWhere('chasis_no', $request->chasis_no)
-                  ->orWhere('engine_no', $request->engine_no);
-        })->first();
-    
-        if ($existingCar) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'A car with the same registration number, chassis number, or engine number already exists.',
-            ], 409); // Conflict status code
         }
+        // $existingCar = $existingCar->first();
+
+    
+        // if ($existingCar) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'A car with the same registration number, chassis number, or engine number already exists.',
+        //     ], 409); // Conflict status code
+        // }
         // Handle document images upload
         $documentImages = [];
         if ($request->hasFile('document_images')) {
@@ -84,9 +102,10 @@ class CarController extends Controller
             }
         }
 
+        $user_id = Auth::user()->id;
         try {
             $carData = [
-                'user_id' => auth()->user()->id,
+                'user_id' => $user_id,
                 'name_of_owner' => $request->name_of_owner,
                 'phone_number' => $request->phone_number,
                 'address' => $request->address,
@@ -97,7 +116,7 @@ class CarController extends Controller
                 'engine_no' => $request->engine_no,
                 'vehicle_year' => $request->vehicle_year,
                 'vehicle_color' => $request->vehicle_color,
-                'status' => $request->registration_status === 'registered' ? 'pending' : 'active'
+                'status' => $request->registration_status === 'registered' ? 'active' : 'pending'
             ];
 
             // Add registered car specific fields
@@ -136,7 +155,8 @@ class CarController extends Controller
      */
     public function getMyCars()
     {
-        $cars = Car::where('user_id', auth()->user()->id)
+        $user_id = Auth::user()->id;
+        $cars = Car::where('user_id', $user_id)
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -150,8 +170,9 @@ class CarController extends Controller
      * Get specific car details
      */
     public function show($id)
-    {
-        $car = Car::where('user_id', auth()->user()->id)
+    {  
+         $user_id = Auth::user()->id;
+        $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
         return response()->json([
@@ -163,9 +184,10 @@ class CarController extends Controller
     /**
      * Update car details
      */
-    public function update(Request $request, $id)
+    public function update(Request $request,$id)
     {
-        $car = Car::where('user_id', auth()->user()->id)
+        $user_id = Auth::user()->id;
+        $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -215,7 +237,8 @@ class CarController extends Controller
      */
     public function destroy($id)
     {
-        $car = Car::where('user_id', auth()->user()->id)
+        $user_id = Auth::user()->id;
+        $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
         // Delete associated documents
@@ -231,5 +254,79 @@ class CarController extends Controller
             'status' => 'success',
             'message' => 'Car deleted successfully'
         ]);
+    }
+
+    public function InsertDetail(Request $request)
+    {
+       
+                $url = "https://api.paystack.co/transaction/initialize";
+                $fields = [
+                    'email' => "customer@email.com",
+                    'amount' => "500000"
+                  ];
+
+                  $fields_string = http_build_query($fields);
+
+                  $ch = curl_init();
+                  $SECRET_KEY = 'sk_test_ed10add7e4f28be7fc2620d55909e970d4835dbb';
+                  
+                  curl_setopt($ch,CURLOPT_URL, $url);
+                  curl_setopt($ch,CURLOPT_POST, true);
+                  curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+                  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                    "Authorization: Bearer " . $SECRET_KEY,
+                    "Cache-Control: no-cache",
+                  ));
+                  
+                  curl_setopt($ch,CURLOPT_RETURNTRANSFER, true); 
+                  
+                  $result = curl_exec($ch);
+                  echo $result;
+    }
+    public function Verification()
+    {
+        $transaction_id = 'b9evi3r18a'; // You can also pass this dynamically
+    
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('PAYSTACK_PRIVATE_KEY'),
+            'Content-Type' => 'application/json',
+            'Cache-Control' => 'no-cache',
+        ])->get("https://api.paystack.co/transaction/verify/{$transaction_id}");
+    
+        $result = $response->json();
+    
+        if (isset($result['data']['status'])) {
+            $status = $result['data']['status'];
+    
+            if ($status == 'success') {
+                Transaction::where('user_id', Auth::id())
+                    ->where('transaction_id', $transaction_id)
+                    ->update(['status' => 'approved']);
+            } elseif ($result['status'] == false) {
+                Transaction::where('user_id', Auth::id())
+                    ->where('transaction_id', $transaction_id)
+                    ->update(['status' => 'pending']);
+            } else {
+                Transaction::where('user_id', Auth::id())
+                    ->where('transaction_id', $transaction_id)
+                    ->update(['status' => 'failed']);
+            }
+    
+            // Always update raw response
+            Transaction::where('user_id', Auth::id())
+                ->where('transaction_id', $transaction_id)
+                ->update([
+                    'raw_response' => json_encode($result)
+                ]);
+    
+            // If successful and transaction record updated
+            $success = Transaction::where('user_id', Auth::id())
+                ->where('transaction_id', $transaction_id)
+                ->first('status');
+    
+            return $success;
+        }
+    
+        return response()->json(['message' => 'Unable to verify transaction'], 400);
     }
 }
