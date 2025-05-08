@@ -94,26 +94,54 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Password is incorrect',
-                // 'data' => null
             ], 400);
         }
-
-        // Check for dependencies (e.g., posts, comments)
-        // Example: if ($user->posts()->exists()) { ... }
 
         // Log the deletion
         \Log::info('User account deleted', ['user_id' => $user->id]);
 
-        // Notify the user (e.g., send an email)
-        // Mail::to($user->email)->send(new AccountDeletedMail());
-
-        // Delete the user
-        $user->forceDelete();
+        // Soft delete the user
+        $user->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Account deleted successfully',
-            // 'data' => null
+        ]);
+    }
+
+    public function restoreAccount(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        // Find the soft-deleted user
+        $user = User::withTrashed()->where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Check the password
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password is incorrect',
+            ], 400);
+        }
+
+        // Restore the user
+        $user->restore();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account restored successfully',
+            'data' => $user,
         ]);
     }
 }
