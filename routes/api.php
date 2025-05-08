@@ -55,6 +55,7 @@ Route::controller(AuthController::class)->group(function () {
 
         Route::get('/car-types', [CarTypeController::class, 'index']);
 
+        Route::post('/restore-account', [ProfileController::class, 'restoreAccount']);
     });
 
     // Social authentication routes

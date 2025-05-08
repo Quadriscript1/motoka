@@ -100,12 +100,48 @@ class ProfileController extends Controller
         // Log the deletion
         \Log::info('User account deleted', ['user_id' => $user->id]);
 
-        // Delete the user (soft delete)
+        // Soft delete the user
         $user->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Account deleted successfully',
+        ]);
+    }
+
+    public function restoreAccount(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        // Find the soft-deleted user
+        $user = User::withTrashed()->where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Check the password
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password is incorrect',
+            ], 400);
+        }
+
+        // Restore the user
+        $user->restore();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account restored successfully',
+            'data' => $user,
         ]);
     }
 }
