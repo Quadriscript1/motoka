@@ -29,7 +29,7 @@ class CarController extends Controller
         // Base validation rules for both registered and unregistered cars
         $baseRules = [
             'name_of_owner' => 'required|string|max:255',
-            'phone_number' => 'required|string',
+            'phone_number' => 'nullable|string',
             'address' => 'required|string',
             'vehicle_make' => 'required|string|max:255',
             'vehicle_model' => 'required|string|max:255',
@@ -72,6 +72,14 @@ class CarController extends Controller
         // })->first();
         // $existingCar = Car::query();
         $userId= Auth::user()->id;
+        if (auth()->id() != $id) {
+            return response()->json(['message' => 'Unauthorized access.'], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => auth()->user(),
+        ]);
 
         if ($request->registration_status === 'registered') {
             $existingCar = Car::where('user_id', $userId)->get();

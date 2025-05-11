@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Http\Controllers\VerificationController;
 //use App\Mail\SendEmailVerification;
+use Illuminate\Support\Facades\DB;
 use App\Mail\SendPhoneVerification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Services\VerificationService;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\VerificationController;
 
 class AuthController extends Controller
 {
@@ -148,7 +150,6 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
-
         // **Check if email is verified**
         if ($request->email && is_null($user->email_verified_at)) {
             return response()->json([
@@ -169,7 +170,95 @@ class AuthController extends Controller
             ]
         ]);
     }
+    public function sendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Email not found'], 404);
+        }
+
+        $email = $request->email;
+        $otp = rand(100000, 999999);
+        $createdAt = Carbon::now();
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => $email,
+            'otp' => $otp,
+            'created_at' => $createdAt,
+        ]);
+
+        try {
+            Mail::raw("Use this OTP to reset your password: $otp", function ($message) use ($email) {
+                $message->to($email)
+                        ->subject('Your OTP Code')
+                        ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+            });
+
+            return response()->json(['status' => true, 'message' => 'OTP sent']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => 'Mailer error: ' . $e->getMessage()]);
+        }
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $email = $request->email;
+        $otp = $request->otp;
+
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $email)
+            ->where('otp', $otp)
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (!$record) {
+            return response()->json(['status' => false, 'message' => 'Invalid OTP'], 404);
+        }
+
+        $otpTime = Carbon::parse($record->created_at);
+        if ($otpTime->diffInMinutes(Carbon::now()) > 15) {
+            return response()->json(['status' => false, 'message' => 'OTP expired']);
+        }
+
+        return response()->json(['status' => true, 'message' => 'OTP verified']);
+    }
+
+    public function reset(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email'    => 'required|email|exists:users,email',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 400);
+        }
+
+        $email = $request->email;
+        $newPassword = Hash::make($request->password);
+
+        $user = User::where('email', $email)->first();
+        $user->password = $newPassword;
+
+        if ($user->save()) {
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+            return response()->json(['status' => true, 'message' => 'Password updated']);
+        }
+
+        return response()->json(['status' => false, 'message' => 'Failed to update password'], 500);
+    }
 
 
 
