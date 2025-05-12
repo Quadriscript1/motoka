@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
@@ -17,11 +19,33 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Profile retrieved successfully',
-                'data' => $user
+                'data' => [
+                    'id' => $user->id,
+                    'user_type_id' => $user->user_type_id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at,
+                    'image' => $user->image ? asset('storage/' . $user->image) : null,
+                    'phone_number' => $user->phone_number,
+                    'social_id' => $user->social_id,
+                    'social_type' => $user->social_type,
+                    'social_avatar' => $user->social_avatar,
+                    'address' => $user->address,
+                    'gender' => $user->gender,
+                    'email_verification_code' => $user->email_verification_code,
+                    'email_verification_code_expires_at' => $user->email_verification_code_expires_at,
+                    'phone_verification_code' => $user->phone_verification_code,
+                    'phone_verification_code_expires_at' => $user->phone_verification_code_expires_at,
+                    'phone_verified_at' => $user->phone_verified_at,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                    'deleted_at' => $user->deleted_at,
+                    'user_type' => $user->userType ? $user->userType->user_type_name : null
+                ]
             ]);
         }
         return response()->json([
-            'Status' => false,
+            'success' => false,
             'message' => 'Profile Not found',
         ]);
     }
@@ -31,16 +55,30 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'string|email|max:255|unique:users,email,' . $user->id,
-            'address' => 'string|max:255',
-            'gender' => 'in:male,female,other',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
+            'address' => 'sometimes|nullable|string|max:255',
+            'gender' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                if (!is_null($value) && !in_array(strtolower($value), ['male', 'female', 'other'])) {
+                    $fail('The gender must be Male, Female, or Other.');
+                }
+            }],
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only(['name', 'email', 'address', 'gender']);
+        $data = $request->only(['name', 'email', 'address']);
+        
+        
+        if ($request->has('gender')) {
+            $data['gender'] = strtolower($request->gender);
+        }
 
         if ($request->hasFile('image')) {
+           
+            if ($user->image) {
+                Storage::disk('public')->delete($user->image);
+            }
+            
             $imagePath = $request->file('image')->store('profile_images', 'public');
             $data['image'] = $imagePath;
         }
@@ -50,7 +88,29 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully',
-            'data' => $user
+            'data' => [
+                'id' => $user->id,
+                'user_type_id' => $user->user_type_id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
+                'image' => $user->image ? asset('storage/' . $user->image) : null,
+                'phone_number' => $user->phone_number,
+                'social_id' => $user->social_id,
+                'social_type' => $user->social_type,
+                'social_avatar' => $user->social_avatar,
+                'address' => $user->address,
+                'gender' => $user->gender,
+                'email_verification_code' => $user->email_verification_code,
+                'email_verification_code_expires_at' => $user->email_verification_code_expires_at,
+                'phone_verification_code' => $user->phone_verification_code,
+                'phone_verification_code_expires_at' => $user->phone_verification_code_expires_at,
+                'phone_verified_at' => $user->phone_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+                'deleted_at' => $user->deleted_at,
+                'user_type' => $user->userType ? $user->userType->user_type_name : null
+            ]
         ]);
     }
 
@@ -67,17 +127,14 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Old password is incorrect',
-                // 'data' => null
             ], 400);
         }
 
-        $user->password = Hash::make($request->new_password);
-        $user->save();
+        $user->update(['password' => Hash::make($request->new_password)]);
 
         return response()->json([
             'success' => true,
             'message' => 'Password changed successfully',
-            // 'data' => null
         ]);
     }
 
@@ -98,10 +155,10 @@ class ProfileController extends Controller
         }
 
         // Log the deletion
-        \Log::info('User account deleted', ['user_id' => $user->id]);
+        Log::info('User account deleted', ['user_id' => $user->id]);
 
         // Soft delete the user
-        $user->delete();
+        $user->update(['deleted_at' => now()]);
 
         return response()->json([
             'success' => true,
@@ -136,7 +193,7 @@ class ProfileController extends Controller
         }
 
         // Restore the user
-        $user->restore();
+        $user->update(['deleted_at' => null]);
 
         return response()->json([
             'success' => true,
