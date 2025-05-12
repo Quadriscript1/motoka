@@ -29,7 +29,6 @@ class TwoFactorController extends Controller
             'success' => true,
             'message' => 'Scan the QR code with Google Authenticator',
             'qr_code' => $QR_Image,
-            'secret' => $secret, // for testing, don't show in production
         ]);
     }
 
