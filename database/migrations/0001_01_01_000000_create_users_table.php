@@ -20,7 +20,7 @@ return new class extends Migration
 
 
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
             $table->foreignId('user_type_id')
                 ->constrained('user_types')
                 ->onUpdate('cascade')
