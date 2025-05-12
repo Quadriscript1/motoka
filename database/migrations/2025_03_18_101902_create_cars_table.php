@@ -27,8 +27,8 @@ return new class extends Migration
             $table->string('vehicle_year')->nullable();
             $table->string('vehicle_color')->nullable();
             $table->string('registration_no')->nullable();
-            $table->string('date_issued')->nullable();
-            $table->string('expiry_date')->nullable();
+            $table->date('date_issued')->nullable();
+            $table->date('expiry_date')->nullable();
             $table->json('document_images')->nullable();
             $table->enum('status', ['active', 'pending', 'rejected'])->default('pending');
             $table->timestamps();

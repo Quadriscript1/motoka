@@ -42,10 +42,10 @@ class CarController extends Controller
 
         // Additional rules for registered cars
         $registeredRules = [
-            'registration_no' => 'nullable|string',
-            'date_issued' => 'nullable|date|nullable',
-            'expiry_date' => 'nullable|date|after:date_issued|nullable',
-            'document_images.*' => 'nullable |image|mimes:jpeg,png,jpg|max:2048',
+            'registration_no' => 'required|string',
+            'date_issued' => 'required|date',
+            'expiry_date' => 'required|date|after:date_issued',
+            'document_images.*' => 'required |image|mimes:jpeg,png,jpg|max:2048',
         ];
 
         // Apply validation rules based on registration status
