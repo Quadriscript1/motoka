@@ -8,6 +8,7 @@ use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
+use App\Models\Car;
 use Illuminate\Support\Facades\Route;
 
 // Public authentication routes
@@ -112,3 +113,7 @@ Route::prefix('verify')->group(function () {
 
 // Add this outside the auth:sanctum group, since user is not authenticated yet
 Route::post('/2fa/verify-login', [TwoFactorController::class, 'verifyLogin2fa']);
+Route::get('/get-expiration', function (){
+    $getAllCars = Car::where('user_id', 'J89SPg')->get()->all();
+    return response()->json($getAllCars);
+});
