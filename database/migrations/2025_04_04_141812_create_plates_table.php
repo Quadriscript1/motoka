@@ -9,8 +9,8 @@ return new class extends Migration {
         Schema::create('plates', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('user_id', 6);
+            $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
             $table->string('plate_number')->unique();
             $table->enum('type', ['Normal', 'Customized', 'Dealership']);
             $table->string('preferred_name')->nullable();

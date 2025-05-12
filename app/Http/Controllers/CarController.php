@@ -71,15 +71,15 @@ class CarController extends Controller
         //           ->orWhere('engine_no', $request->engine_no);
         // })->first();
         // $existingCar = Car::query();
-        $userId= Auth::user()->id;
-        if (auth()->id() != $id) {
+        $userId= Auth::user()->userId;
+        if (!$userId) {
             return response()->json(['message' => 'Unauthorized access.'], 403);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => auth()->user(),
-        ]);
+        // return response()->json([
+        //     'status' => 'success',
+        //     'data' => auth()->user(),
+        // ]);
 
         if ($request->registration_status === 'registered') {
             $existingCar = Car::where('user_id', $userId)->get();
@@ -110,10 +110,10 @@ class CarController extends Controller
             }
         }
 
-        $user_id = Auth::user()->id;
+        // $user_id = Auth::user()->id;
         try {
             $carData = [
-                'user_id' => $user_id,
+                'user_id' => $userId,
                 'name_of_owner' => $request->name_of_owner,
                 'phone_number' => $request->phone_number,
                 'address' => $request->address,
@@ -163,7 +163,7 @@ class CarController extends Controller
      */
     public function getMyCars()
     {
-        $user_id = Auth::user()->id;
+        $user_id = Auth::user()->userId;
         $cars = Car::where('user_id', $user_id)
             ->orderBy('created_at', 'asc')
             ->get();
@@ -179,7 +179,7 @@ class CarController extends Controller
      */
     public function show($id)
     {  
-         $user_id = Auth::user()->id;
+         $user_id = Auth::user()->userId;
         $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
@@ -194,7 +194,7 @@ class CarController extends Controller
      */
     public function update(Request $request,$id)
     {
-        $user_id = Auth::user()->id;
+        $user_id = Auth::user()->userId;
         $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 
@@ -245,7 +245,7 @@ class CarController extends Controller
      */
     public function destroy($id)
     {
-        $user_id = Auth::user()->id;
+        $user_id = Auth::user()->userId;
         $car = Car::where('user_id', $user_id)
             ->findOrFail($id);
 

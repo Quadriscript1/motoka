@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
 
         $admin = array(
             array(
-                'id' => 123456,
+                'userId' => 123456,
                 'user_type_id' => 1,
                 'email' => "dev@motoka.net",
                 'phone_number' => "08169453935",

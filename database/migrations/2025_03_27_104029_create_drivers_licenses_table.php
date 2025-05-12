@@ -10,8 +10,8 @@ return new class extends Migration {
         Schema::create('drivers_licenses', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('user_id', 6);
+            $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
             $table->string('license_number')->unique()->nullable();
             $table->enum('license_type', ['new', 'renew']);; 
             $table->string('full_name');
