@@ -7,13 +7,14 @@ use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 // Public authentication routes
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register')->name('register');
     Route::post('login', 'login')->name('login');
-    Route::post('login2', 'login2')->name('login2')->middleware('auth:sanctum');
+    Route::post('login2', 'login2')->name('login2');
 
      Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
@@ -60,6 +61,14 @@ Route::controller(AuthController::class)->group(function () {
         Route::get('/car-types', [CarTypeController::class, 'index']);
 
         Route::post('/restore-account', [ProfileController::class, 'restoreAccount']);
+
+        Route::middleware('auth:sanctum')->prefix('2fa')->group(function () {
+            Route::post('/enable-google', [TwoFactorController::class, 'enableGoogle2fa']);
+            Route::post('/verify-google', [TwoFactorController::class, 'verifyGoogle2fa']);
+            Route::post('/enable-email', [TwoFactorController::class, 'enableEmail2fa']);
+            Route::post('/verify-email', [TwoFactorController::class, 'verifyEmail2fa']);
+            Route::post('/disable', [TwoFactorController::class, 'disable2fa']);
+        });
     });
 
     // Social authentication routes
@@ -100,3 +109,6 @@ Route::prefix('verify')->group(function () {
 //     Route::get('/', [DriverLicenseController::class, 'index']);       // List all licenses
 //     Route::get('/{id}', [DriverLicenseController::class, 'show']);    // Get a single license
 // });
+
+// Add this outside the auth:sanctum group, since user is not authenticated yet
+Route::post('/2fa/verify-login', [TwoFactorController::class, 'verifyLogin2fa']);

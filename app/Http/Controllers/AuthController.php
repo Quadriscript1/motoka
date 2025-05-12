@@ -139,7 +139,7 @@ class AuthController extends Controller
         }
 
         $userQuery = User::query();
-
+        
         if ($request->email) {
             $userQuery->where('email', $request->email);
         }
@@ -159,6 +159,27 @@ class AuthController extends Controller
                 'status' => 'error',
                 'message' => 'Please verify your email before logging in.'
             ], 403);
+        }
+
+        // 2FA: If enabled, require verification
+        if ($user->two_factor_enabled && $user->two_factor_type === 'email') {
+            $code = rand(100000, 999999);
+            $user->two_factor_email_code = $code;
+            $user->two_factor_email_expires_at = now()->addMinutes(10);
+            $user->two_factor_login_token = \Str::random(40);
+            $user->two_factor_login_expires_at = now()->addMinutes(10);
+            $user->save();
+
+            // Send code via email
+            \Mail::raw("Your 2FA code is: $code", function ($message) use ($user) {
+                $message->to($user->email)->subject('Your 2FA Code');
+            });
+
+            return response()->json([
+                'status' => '2fa_required',
+                'message' => 'A verification code has been sent to your email.',
+                '2fa_token' => $user->two_factor_login_token
+            ]);
         }
 
         $token = $user->createToken('API TOKEN')->plainTextToken;
