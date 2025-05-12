@@ -38,6 +38,7 @@ class Car extends Model
 
     protected $casts = [
         'document_images' => 'array',
+        'expiry_date' => 'date',
     ];
 
     public function user()
