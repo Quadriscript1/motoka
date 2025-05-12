@@ -70,7 +70,10 @@ class AuthController extends Controller
         //     ], 422);
         // }
 
+        $generateUniqueString = Str::random(6); 
+
         $user = User::create([
+            'id' => $generateUniqueString,
             'name' => $request->name,
             'user_type_id' => 2,
             'email' => $request->email,

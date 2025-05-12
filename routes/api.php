@@ -17,8 +17,8 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('login2', 'login2')->name('login2');
 
      Route::post('/send-otp', [AuthController::class, 'sendOtp']);
-Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
-Route::post('/reset-password', [AuthController::class, 'reset']);
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/reset-password', [AuthController::class, 'reset']);
 
     // Protected authentication routes
     Route::middleware('auth:sanctum')->group(function () {
