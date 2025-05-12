@@ -57,9 +57,9 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
-            'address' => 'sometimes|string|max:255',
-            'gender' => ['sometimes', 'string', function ($attribute, $value, $fail) {
-                if (!in_array(strtolower($value), ['male', 'female', 'other'])) {
+            'address' => 'sometimes|nullable|string|max:255',
+            'gender' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                if (!is_null($value) && !in_array(strtolower($value), ['male', 'female', 'other'])) {
                     $fail('The gender must be Male, Female, or Other.');
                 }
             }],
@@ -68,13 +68,13 @@ class ProfileController extends Controller
 
         $data = $request->only(['name', 'email', 'address']);
         
-        // Convert gender to lowercase before saving
+        
         if ($request->has('gender')) {
             $data['gender'] = strtolower($request->gender);
         }
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
+           
             if ($user->image) {
                 Storage::disk('public')->delete($user->image);
             }
