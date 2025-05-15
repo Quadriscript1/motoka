@@ -166,12 +166,12 @@ class AuthController extends Controller
             $code = rand(100000, 999999);
             $user->two_factor_email_code = $code;
             $user->two_factor_email_expires_at = now()->addMinutes(10);
-            $user->two_factor_login_token = \Str::random(40);
+            $user->two_factor_login_token = Str::random(40);
             $user->two_factor_login_expires_at = now()->addMinutes(10);
             $user->save();
 
             // Send code via email
-            \Mail::raw("Your 2FA code is: $code", function ($message) use ($user) {
+            Mail::raw("Your 2FA code is: $code", function ($message) use ($user) {
                 $message->to($user->email)->subject('Your 2FA Code');
             });
 
@@ -194,38 +194,7 @@ class AuthController extends Controller
             ]
         ]);
     }
-    // public function sendOtp(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'email' => 'required|email|exists:users,email',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json(['status' => false, 'message' => 'Email not found'], 404);
-    //     }
-
-    //     $email = $request->email;
-    //     $otp = rand(100000, 999999);
-    //     $createdAt = Carbon::now();
-
-    //     DB::table('password_reset_tokens')->updateOrInsert([
-    //         'email' => $email,
-    //         'otp' => $otp,
-    //         'created_at' => $createdAt,
-    //     ]);
-
-    //     try {
-    //         Mail::raw("Use this OTP to reset your password: $otp", function ($message) use ($email) {
-    //             $message->to($email)
-    //                     ->subject('Your OTP Code')
-    //                     ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-    //         });
-
-    //         return response()->json(['status' => true, 'message' => 'OTP sent']);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['status' => false, 'message' => 'Mailer error: ' . $e->getMessage()]);
-    //     }
-    // }
+    
     public function sendOtp(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -245,13 +214,13 @@ class AuthController extends Controller
 
     if ($existingOtp) {
         $createdAt = Carbon::parse($existingOtp->created_at);
-        $diffInSeconds = $now->diffInSeconds($createdAt);
+        $diffInSeconds = $createdAt->diffInSeconds($now);
 
         if ($diffInSeconds < 60) {
             return response()->json([
                 'status' => false,
                 'message' => 'Please wait before requesting another OTP.',
-                'remaining_seconds' => 60 - $diffInSeconds,
+                'remaining_seconds' => 10 - $diffInSeconds,
             ], 429);
         }
 
