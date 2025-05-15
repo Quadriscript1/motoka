@@ -166,12 +166,12 @@ class AuthController extends Controller
             $code = rand(100000, 999999);
             $user->two_factor_email_code = $code;
             $user->two_factor_email_expires_at = now()->addMinutes(10);
-            $user->two_factor_login_token = \Str::random(40);
+            $user->two_factor_login_token = Str::random(40);
             $user->two_factor_login_expires_at = now()->addMinutes(10);
             $user->save();
 
             // Send code via email
-            \Mail::raw("Your 2FA code is: $code", function ($message) use ($user) {
+            Mail::raw("Your 2FA code is: $code", function ($message) use ($user) {
                 $message->to($user->email)->subject('Your 2FA Code');
             });
 
@@ -214,7 +214,7 @@ class AuthController extends Controller
 
     if ($existingOtp) {
         $createdAt = Carbon::parse($existingOtp->created_at);
-        $diffInSeconds = $now->diffInSeconds($createdAt);
+        $diffInSeconds = $createdAt->diffInSeconds($now);
 
         if ($diffInSeconds < 60) {
             return response()->json([
