@@ -194,38 +194,7 @@ class AuthController extends Controller
             ]
         ]);
     }
-    // public function sendOtp(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'email' => 'required|email|exists:users,email',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json(['status' => false, 'message' => 'Email not found'], 404);
-    //     }
-
-    //     $email = $request->email;
-    //     $otp = rand(100000, 999999);
-    //     $createdAt = Carbon::now();
-
-    //     DB::table('password_reset_tokens')->updateOrInsert([
-    //         'email' => $email,
-    //         'otp' => $otp,
-    //         'created_at' => $createdAt,
-    //     ]);
-
-    //     try {
-    //         Mail::raw("Use this OTP to reset your password: $otp", function ($message) use ($email) {
-    //             $message->to($email)
-    //                     ->subject('Your OTP Code')
-    //                     ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-    //         });
-
-    //         return response()->json(['status' => true, 'message' => 'OTP sent']);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['status' => false, 'message' => 'Mailer error: ' . $e->getMessage()]);
-    //     }
-    // }
+    
     public function sendOtp(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -251,7 +220,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Please wait before requesting another OTP.',
-                'remaining_seconds' => 60 - $diffInSeconds,
+                'remaining_seconds' => 10 - $diffInSeconds,
             ], 429);
         }
 
