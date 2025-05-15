@@ -114,25 +114,27 @@ Route::prefix('verify')->group(function () {
 
 // Add this outside the auth:sanctum group, since user is not authenticated yet
 Route::post('/2fa/verify-login', [TwoFactorController::class, 'verifyLogin2fa']);
-Route::get('/get-expiration', function () {
-    $cars = Car::where('user_id', 'J89SPg')->get();
-    $result = [];
 
-    foreach ($cars as $car) {
-        $expirationDate = Carbon::parse($car->expiration_date);
-        if ($expirationDate->isFuture()) {
-            $daysLeft = Carbon::now()->diffInDays($expirationDate);
-            $result[] = [
+Route::get('/get-expiration', function () {
+    $getAllCars = Car::where('user_id', 'J89SPg')->get();
+    $mtd = [];
+
+    foreach ($getAllCars as $car) {
+        $expiration = Carbon::parse($car->expiration_date);
+
+        if ($expiration->greaterThan(Carbon::now())) {
+            $mtd[] = [
                 'car_id' => $car->id,
-                'expiration_date' => $expirationDate->toDateString(),
-                'days_left' => $daysLeft,
-                'expires_in' => Carbon::now()->diffForHumans($expirationDate, [
-                    'syntax' => Carbon::DIFF_RELATIVE_TO_NOW,
+                'expiration_date' => $expiration->toDateTimeString(), // format as 'Y-m-d H:i:s'
+                'days_until_expiration' => Carbon::now()->diffInDays($expiration),
+                'expires_in' => Carbon::now()->diffForHumans($expiration, [
+                    'parts' => 2,
                     'short' => true,
+                    'syntax' => Carbon::DIFF_RELATIVE_TO_NOW,
                 ])
             ];
         }
     }
 
-    return response()->json($result);
+    return response()->json($mtd);
 });

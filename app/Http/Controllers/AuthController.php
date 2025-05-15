@@ -208,7 +208,7 @@ class AuthController extends Controller
         $otp = rand(100000, 999999);
         $createdAt = Carbon::now();
 
-        DB::table('password_reset_tokens')->insert([
+        DB::table('password_reset_tokens')->updateOrInsert([
             'email' => $email,
             'otp' => $otp,
             'created_at' => $createdAt,
