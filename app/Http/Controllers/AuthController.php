@@ -53,23 +53,7 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        // Check if email or phone number already exists in the database (excluding soft deleted users)
-        // $existingUser = User::where(function ($query) use ($request) {
-        //     if ($request->email) {
-        //         $query->orWhere('email', $request->email);
-        //     }
-        //     if ($request->phone_number) {
-        //         $query->orWhere('phone_number', $request->phone_number);
-        //     }
-        // })->whereNull('deleted_at')->first();
-
-        // if ($existingUser) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Email or phone number is already registered.'
-        //     ], 422);
-        // }
-
+        
         $generateUniqueString = Str::random(6); 
 
         $user = User::firstOrNew([
@@ -98,7 +82,10 @@ class AuthController extends Controller
         }
 
 
-        $token = $user->createToken("API TOKEN")->plainTextToken;
+
+        if ($user->save()) {
+            $token = $user->createToken("API TOKEN")->plainTextToken;
+        }
 
         $message = 'User created successfully. ';
         if ($request->email) {
@@ -196,60 +183,60 @@ class AuthController extends Controller
     }
     
     public function sendOtp(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'email' => 'required|email|exists:users,email',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['status' => false, 'message' => 'Email not found'], 404);
-    }
-
-    $email = $request->email;
-    $otp = rand(100000, 999999);
-    $now = Carbon::now();
-
-    // Check existing OTP
-    $existingOtp = DB::table('password_reset_tokens')->where('email', $email)->first();
-
-    if ($existingOtp) {
-        $createdAt = Carbon::parse($existingOtp->created_at);
-        $diffInSeconds = $createdAt->diffInSeconds($now);
-
-        if ($diffInSeconds < 60) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Please wait before requesting another OTP.',
-                'remaining_seconds' => 10 - $diffInSeconds,
-            ], 429);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Email not found'], 404);
         }
 
-        // Update existing OTP
-        DB::table('password_reset_tokens')->where('email', $email)->update([
-            'otp' => $otp,
-            'created_at' => $now,
-        ]);
-    } else {
-        // Insert new OTP
-        DB::table('password_reset_tokens')->insert([
-            'email' => $email,
-            'otp' => $otp,
-            'created_at' => $now,
-        ]);
-    }
+        $email = $request->email;
+        $otp = rand(100000, 999999);
+        $now = Carbon::now();
 
-    try {
-        Mail::raw("Use this OTP to reset your password: $otp", function ($message) use ($email) {
-            $message->to($email)
-                    ->subject('Your OTP Code')
-                    ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-        });
+        // Check existing OTP
+        $existingOtp = DB::table('password_reset_tokens')->where('email', $email)->first();
 
-        return response()->json(['status' => true, 'message' => 'OTP sent']);
-    } catch (\Exception $e) {
-        return response()->json(['status' => false, 'message' => 'Mailer error: ' . $e->getMessage()]);
+        if ($existingOtp) {
+            $createdAt = Carbon::parse($existingOtp->created_at);
+            $diffInSeconds = $createdAt->diffInSeconds($now);
+
+            if ($diffInSeconds < 60) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please wait before requesting another OTP.',
+                    'remaining_seconds' => 60 - $diffInSeconds,
+                ], 429);
+            }
+
+            // Update existing OTP
+            DB::table('password_reset_tokens')->where('email', $email)->update([
+                'otp' => $otp,
+                'created_at' => $now,
+            ]);
+        } else {
+            // Insert new OTP
+            DB::table('password_reset_tokens')->insert([
+                'email' => $email,
+                'otp' => $otp,
+                'created_at' => $now,
+            ]);
+        }
+
+        try {
+            Mail::raw("Use this OTP to reset your password: $otp", function ($message) use ($email) {
+                $message->to($email)
+                        ->subject('Your OTP Code')
+                        ->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+            });
+
+            return response()->json(['status' => true, 'message' => 'OTP sent']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => 'Mailer error: ' . $e->getMessage()]);
+        }
     }
-}
 
 
     public function verifyOtp(Request $request)
@@ -281,13 +268,21 @@ class AuthController extends Controller
             return response()->json(['status' => false, 'message' => 'OTP expired']);
         }
 
-        return response()->json(['status' => true, 'message' => 'OTP verified']);
+        $token = Str::random(10);
+
+        DB::table('password_reset_tokens')->where('email', $email)->update([
+            'token' => $token,
+            'otp' => null,
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'OTP verified','token' => $token]);
     }
 
     public function reset(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email'    => 'required|email|exists:users,email',
+            'token'    => 'required|string',
             'password' => 'required|min:6|confirmed',
         ]);
 
@@ -296,6 +291,15 @@ class AuthController extends Controller
         }
 
         $email = $request->email;
+         $token = $request->token;
+
+    // Check if the token is valid
+        $record = DB::table('password_reset_tokens')->where('email', $email)->where('token', $token)->first();
+
+        if (!$record) {
+            return response()->json(['status' => false, 'message' => 'Invalid token'], 401);
+        }
+
         $newPassword = Hash::make($request->password);
 
         $user = User::where('email', $email)->first();
