@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DriverLicense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,75 +12,127 @@ class DriverLicenseController extends Controller
 {
     public function store(Request $request)
     {
-         //dd($request->all(),auth()->user()->id);
-        $request->validate([
-            'license_number' => 'nullable|unique:licenses',
-            'license_type' => 'nullable',
-            'full_name' => 'nullable',
-            'phone_number' => 'nullable',
+         
+        $baseRules = [
+            'license_type' => 'required|in:new,renew',
+        ];
+        $newRule = [
+            'full_name' => 'required',
+            'phone_number' => 'required',
             'address' => 'nullable',
-            'date_of_birth' => 'nullable|date',
-            'state_of_origin' => 'nullable',
-            'local_government' => 'nullable',
-            'validity_years' => 'nullable|integer',
+            'date_of_birth' => 'required|date',
             'place_of_birth'=>'nullable',
+            'state_of_origin' => 'required',
+            'local_government' => 'nullable',
             'blood_group'=>'nullable',
             'height'=>'nullable',
-            'eye_color'=>'nullable',
             'occupation'=>'nullable',
             'next_of_kin'=>'nullable',
             'next_of_kin_phone'=>'nullable',
             'mother_maiden_name'=>'nullable',
-            'issued_date' => 'required|date',
-            'expiry_date' => 'required|date|after:issued_date',
+            'license_year' => 'required|date',
             'passport_photo' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-        ]);
-        
+        ];
+        $renewRule =[
+             'license_number' => 'required|unique',
+             'date_of_birth' => 'required|date',
+        ];
+    
+        if ($request->license_type === 'new') {
+            $rules = array_merge($baseRules,$newRule);
+        }
+         if ($request->license_type === 'renew') {
+            $rules = array_merge($baseRules,$renewRule);
+        }
 
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        $userId= Auth::user()->userId;
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized access.'], 403);
+        }
+
+        if ($request->license_type === 'new') {
+            $licenseDetails = DriverLicense::where('user_id', $userId)->get();
+            foreach ($licenseDetails as $key => $license) {
+                if ($license->full_name == $request->full_name ) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'A user with the same license name already exists.',
+                    ]);
+                }
+            }
+        }
         $passportPath = $request->file('passport_photo')
             ? $request->file('passport_photo')->store('passports', 'public')
             : null;
 
-        $userId= Auth::user()->userId;
+        if ($request->license_type === 'new') {
+            $license = DriverLicense::create([
+                'user_id' => $userId,
+                'full_name' => $request->full_name,
+                'phone_number' => $request->phone_number,
+                'address' => $request->address,
+                'date_of_birth' => $request->date_of_birth,
+                'license_type' => $request->license_type,
+                'state_of_origin' => $request->state_of_origin,
+                'local_government' => $request->local_government,
+                'place_of_birth' => $request->place_of_birth,
+                'blood_group' => $request->blood_group,
+                'height' => $request->height,
+                'occupation' => $request->occupation,
+                'next_of_kin' => $request->next_of_kin,
+                'next_of_kin_phone' => $request->next_of_kin_phone,
+                'mother_maiden_name' => $request->mother_maiden_name,
+                'license_year' => $request->license_year,
+                'passport_photo' => $passportPath
+            ]);
+        }
 
-        $license = DriverLicense::create([
-            'user_id' => $userId,
-            'full_name' => $request->full_name,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
-            'date_of_birth' => $request->date_of_birth,
-            'license_type' => $request->license_type,
-            'license_number' => $request->license_number,
-            'state_of_origin' => $request->state_of_origin,
-            'local_government' => $request->local_government,
-            'validity_years' => $request->validity_years,
-            'place_of_birth' => $request->place_of_birth,
-            'blood_group' => $request->blood_group,
-            'height' => $request->height,
-            'eye_color' => $request->eye_color,
-            'occupation' => $request->occupation,
-            'next_of_kin' => $request->next_of_kin,
-            'next_of_kin_phone' => $request->next_of_kin_phone,
-            'mother_maiden_name' => $request->mother_maiden_name,
-            'issued_date' => $request->issued_date,
-            'expiry_date' => $request->expiry_date,
-            'passport_photo' => $passportPath
-            
-        ]);
-        return response()->json([
-            'message' => 'Driver License application submitted successfully!',
-            'data' => $license
-        ], 201);
+
+        if ($request->license_type === 'renew') {
+            $license = DriverLicense::create([
+                'user_id' => $userId,
+                'license_type' => $request->license_type,
+                'license_number' => $request->license_number,
+                'date_of_birth' => $request->date_of_birth,
+               
+            ]);
+        }
+        
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Licenses registered successfully',
+                'car' => $license
+            ]);
     }
 
     public function index()
     {
-        return response()->json(DriverLicense::all());
+        $userId= Auth::user()->userId;
+       $getLicense =  DriverLicense::where('user_id',$userId)->get();
+        return response()->json(["status"=> true,"data"=>$getLicense],200);
     }
 
     public function show($id)
     {
-        $license = DriverLicense::findOrFail($id);
-        return response()->json($license);
+        $userId= Auth::user()->userId;
+        $license = DriverLicense::where(['id'=>$id,'user_id'=>$userId])->first();
+
+        if ( $license) {
+            return response()->json(["status"=> true,"data"=>$license],200);
+        }
+
+        return response()->json(["status"=> false,"message"=> "License not found"],401);
+
     }
 }
