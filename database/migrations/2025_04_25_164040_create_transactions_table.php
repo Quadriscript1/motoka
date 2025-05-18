@@ -13,9 +13,10 @@ return new class extends Migration
 {
     Schema::create('transactions', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('user_id');
+        $table->string('user_id', 6);
+        $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
         $table->string('transaction_id')->unique();
-        $table->string('status');
+        $table->enum('status',['pending', 'success', 'failed'])->default('pending');
         $table->json('raw_response')->nullable();
         $table->timestamps();
 

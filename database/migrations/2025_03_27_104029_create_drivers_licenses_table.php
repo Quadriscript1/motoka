@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->string('user_id', 6);
             $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
             $table->string('license_number')->unique()->nullable();
-            $table->enum('license_type', ['new', 'renew']);; 
+            $table->enum('license_type', ['new', 'renew']);
             $table->string('full_name');
             $table->string('phone_number');
             $table->text('address');

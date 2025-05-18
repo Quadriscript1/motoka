@@ -251,36 +251,36 @@ class CarController extends Controller
         ]);
     }
 
-    public function InsertDetail(Request $request)
+   public function InsertDetail(Request $request)
     {
        
-                $url = "https://api.paystack.co/transaction/initialize";
-                $fields = [
-                    'email' => "customer@email.com",
-                    'amount' => "500000"
-                  ];
+        $url = "https://api.paystack.co/transaction/initialize";
+        $fields = [
+            'email' => $request->email,
+            'amount' => $request->amount
+            ];
 
-                  $fields_string = http_build_query($fields);
+            $fields_string = http_build_query($fields);
 
-                  $ch = curl_init();
-                  $SECRET_KEY = 'sk_test_ed10add7e4f28be7fc2620d55909e970d4835dbb';
-                  
-                  curl_setopt($ch,CURLOPT_URL, $url);
-                  curl_setopt($ch,CURLOPT_POST, true);
-                  curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
-                  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                    "Authorization: Bearer " . $SECRET_KEY,
-                    "Cache-Control: no-cache",
-                  ));
-                  
-                  curl_setopt($ch,CURLOPT_RETURNTRANSFER, true); 
-                  
-                  $result = curl_exec($ch);
-                  echo $result;
+            $ch = curl_init();
+            $SECRET_KEY = 'sk_test_ed10add7e4f28be7fc2620d55909e970d4835dbb';
+            
+            curl_setopt($ch,CURLOPT_URL, $url);
+            curl_setopt($ch,CURLOPT_POST, true);
+            curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            "Authorization: Bearer " . $SECRET_KEY,
+            "Cache-Control: no-cache",
+            ));
+            
+            curl_setopt($ch,CURLOPT_RETURNTRANSFER, true); 
+            
+            $result = curl_exec($ch);
+            echo $result;
     }
-    public function Verification()
+    public function Verification(Request $request)
     {
-        $transaction_id = 'b9evi3r18a'; // You can also pass this dynamically
+        $transaction_id = $request->transaction_id; 
     
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . env('PAYSTACK_PRIVATE_KEY'),
@@ -289,33 +289,36 @@ class CarController extends Controller
         ])->get("https://api.paystack.co/transaction/verify/{$transaction_id}");
     
         $result = $response->json();
+        
+        
+         $user_id = Auth::user()->userId;
     
         if (isset($result['data']['status'])) {
             $status = $result['data']['status'];
     
             if ($status == 'success') {
-                Transaction::where('user_id', Auth::id())
+                Transaction::where('user_id', $user_id)
                     ->where('transaction_id', $transaction_id)
-                    ->update(['status' => 'approved']);
+                    ->update(['status' => 'success']);
             } elseif ($result['status'] == false) {
-                Transaction::where('user_id', Auth::id())
+                Transaction::where('user_id', $user_id)
                     ->where('transaction_id', $transaction_id)
                     ->update(['status' => 'pending']);
             } else {
-                Transaction::where('user_id', Auth::id())
+                Transaction::where('user_id', $user_id)
                     ->where('transaction_id', $transaction_id)
                     ->update(['status' => 'failed']);
             }
     
             // Always update raw response
-            Transaction::where('user_id', Auth::id())
+            Transaction::where('user_id', $user_id)
                 ->where('transaction_id', $transaction_id)
                 ->update([
                     'raw_response' => json_encode($result)
                 ]);
     
             // If successful and transaction record updated
-            $success = Transaction::where('user_id', Auth::id())
+            $success = Transaction::where('user_id', $user_id)
                 ->where('transaction_id', $transaction_id)
                 ->first('status');
     

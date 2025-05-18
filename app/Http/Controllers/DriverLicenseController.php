@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DriverLicense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class DriverLicenseController extends Controller
@@ -39,8 +40,10 @@ class DriverLicenseController extends Controller
             ? $request->file('passport_photo')->store('passports', 'public')
             : null;
 
+        $userId= Auth::user()->userId;
+
         $license = DriverLicense::create([
-            'user_id' => auth()->user()->id,
+            'user_id' => $userId,
             'full_name' => $request->full_name,
             'phone_number' => $request->phone_number,
             'address' => $request->address,
@@ -63,8 +66,6 @@ class DriverLicenseController extends Controller
             'passport_photo' => $passportPath
             
         ]);
-        return $license;
-
         return response()->json([
             'message' => 'Driver License application submitted successfully!',
             'data' => $license
