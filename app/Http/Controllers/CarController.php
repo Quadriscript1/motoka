@@ -251,9 +251,8 @@ class CarController extends Controller
         ]);
     }
 
-   public function InsertDetail(Request $request)
+    public function InsertDetail(Request $request)
     {
-       
         $url = "https://api.paystack.co/transaction/initialize";
         $fields = [
             'email' => $request->email,
@@ -276,6 +275,15 @@ class CarController extends Controller
             
             $result = curl_exec($ch);
             echo $result;
+            
+            
+            Transaction::create([
+                'user_id' => Auth::user()->userId,
+                'transaction_id' => json_decode($result)->data->reference,
+                'status' => "pending"
+            ]);
+
+            curl_close($ch);
     }
     public function Verification(Request $request)
     {
@@ -319,11 +327,11 @@ class CarController extends Controller
             // If successful and transaction record updated
             $success = Transaction::where('user_id', $user_id)
                 ->where('transaction_id', $transaction_id)
-                ->first('status');
+                ->first();
     
-            return $success;
+            
+             return response()->json(['message' => 'Verified','data'=> $success], 200);
         }
-    
         return response()->json(['message' => 'Unable to verify transaction'], 400);
     }
 }
