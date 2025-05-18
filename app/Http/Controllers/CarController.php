@@ -63,26 +63,16 @@ class CarController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        // $existingCar = Car::where(function ($query) use ($request) {
-        //     if ($request->registration_status === 'registered') {
-        //         $query->where('registration_no', $request->registration_no);
-        //     }
-        //     $query->orWhere('chasis_no', $request->chasis_no)
-        //           ->orWhere('engine_no', $request->engine_no);
-        // })->first();
-        // $existingCar = Car::query();
+        
         $userId= Auth::user()->userId;
         if (!$userId) {
             return response()->json(['message' => 'Unauthorized access.'], 403);
         }
 
-        // return response()->json([
-        //     'status' => 'success',
-        //     'data' => auth()->user(),
-        // ]);
+
 
         if ($request->registration_status === 'registered') {
-            $existingCar = Car::where('user_id', $userId)->get();
+            $existingCar = ar::where('user_id', $userId)->get();
             foreach ($existingCar as $key => $car) {
                 if ($car->registration_no == $request->registration_no || $car->chasis_no == $request->chasis_no || $car->engine_no == $request->engine_no) {
                     return response()->json([
@@ -92,15 +82,7 @@ class CarController extends Controller
                 }
             }
         }
-        // $existingCar = $existingCar->first();
-
-    
-        // if ($existingCar) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'A car with the same registration number, chassis number, or engine number already exists.',
-        //     ], 409); // Conflict status code
-        // }
+        
         // Handle document images upload
         $documentImages = [];
         if ($request->hasFile('document_images')) {
@@ -199,11 +181,21 @@ class CarController extends Controller
             ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name_of_owner' => 'sometimes|string|max:255',
-            'address' => 'sometimes|string',
-            'vehicle_make' => 'sometimes|string|max:255',
-            'vehicle_model' => 'sometimes|string|max:255',
-            'document_images.*' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048'
+            'name_of_owner' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+            'address' => 'nullable|string',
+            'vehicle_make' => 'nullable|string',
+            'vehicle_model' => 'nullable|string',
+            'registration_status' => 'nullable|in:registered,unregistered',
+            'chasis_no' => 'nullable|string',
+            'engine_no' => 'nullable|string',
+            'vehicle_year' => 'nullable|integer|digits:4|min:1900|max:' . (date('Y') + 1),
+            'vehicle_color' => 'nullable|string',
+            'registration_no' => 'nullable|string',
+            'date_issued' => 'nullable|date',
+            'expiry_date' => 'nullable|date|after:date_issued',
+            'document_images.*' => 'nullable |image|mimes:jpeg,png,jpg|max:2048',
+            
         ]);
 
         if ($validator->fails()) {
@@ -226,12 +218,7 @@ class CarController extends Controller
             $car->document_images = $documentImages;
         }
 
-        $car->update($request->only([
-            'name_of_owner',
-            'address',
-            'vehicle_make',
-            'vehicle_model'
-        ]));
+        $car->update($request->all());
 
         return response()->json([
             'status' => 'success',

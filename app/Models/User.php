@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\DriverLicense;
+use App\Models\Plate;
 
 
 class User extends Authenticatable
@@ -45,4 +47,15 @@ class User extends Authenticatable
     public function userType() {
         return $this->belongsTo(UserType::class, 'user_type_id');
     }
+    public function driversLicense()
+{
+    return $this->hasOne(DriverLicense::class, 'user_id', 'userId');
+
+}
+
+
+public function plate()
+{
+    return $this->hasOne(Plate::class, 'user_id', 'userId');
+}
 }

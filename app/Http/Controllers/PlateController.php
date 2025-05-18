@@ -4,19 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Plate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PlateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Plate::all());
+        return response()->json(Plate::where('user_id',$request->userId)->get());
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'plate_number' => 'required|unique:plates',
-            'type' => 'required|string',
+            'type' => 'required|in:Normal,Customized,Dealership',
             'preferred_name' => 'nullable|string',
             'full_name' => 'required|string',
             'address' => 'required|string',
@@ -43,9 +44,11 @@ class PlateController extends Controller
         $meansOfIDPath = $request->hasFile('means_of_identification')
             ? $request->file('means_of_identification')->store('car-documents', 'public')
             : null;
+
+        $userId= Auth::user()->userId;
     
         $plate = Plate::create([
-            'user_id' => auth()->user()->id,
+            'user_id' => $userId,
             'plate_number' => $request->plate_number,
             'type' => $request->type,
             'preferred_name' => $request->preferred_name,
