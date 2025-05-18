@@ -2,30 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Plate extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'plate_number',
-        'type',
-        'preferred_name',
-        'full_name',
-        'address',
-        'chassis_number',
-        'engine_number',
-        'phone_number',
-        'colour',
-        'car_make',
-        'car_type',
-        'business_type',
-        'cac_document',
-        'letterhead',
-        'means_of_identification'
-    ];
+   
+
+    protected $guarded = [];
+
+    public function user()
+{
+    return $this->belongsTo(User::class,'userId');
+}
 }
 

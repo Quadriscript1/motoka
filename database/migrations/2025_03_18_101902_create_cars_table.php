@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('user_id', 6);
             $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
             $table->string('name_of_owner');
-            $table->string('phone_number');
+            $table->string('phone_number')->nullable();
             $table->text('address');
             $table->string('vehicle_make');
             $table->string('vehicle_model');
