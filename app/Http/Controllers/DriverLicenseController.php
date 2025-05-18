@@ -37,7 +37,7 @@ class DriverLicenseController extends Controller
             'passport_photo' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ];
         $renewRule =[
-             'license_number' => 'required|unique',
+             'license_number' => 'required',
              'date_of_birth' => 'required|date',
         ];
     
