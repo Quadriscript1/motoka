@@ -14,24 +14,21 @@ return new class extends Migration {
             $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
             $table->string('license_number')->unique()->nullable();
             $table->enum('license_type', ['new', 'renew']);
-            $table->string('full_name');
-            $table->string('phone_number');
-            $table->text('address');
-            $table->date('date_of_birth');
+            $table->string('full_name')->nullable();
+            $table->string('phone_number')->nullable();
+            $table->text('address')->nullable();
+            $table->date('date_of_birth')->nullable();
             $table->string('place_of_birth')->nullable();
-            $table->string('state_of_origin');
-            $table->string('local_government');
+            $table->string('state_of_origin')->nullable();
+            $table->string('local_government')->nullable();
             $table->string('blood_group')->nullable();
             $table->string('height')->nullable();
-            $table->string('eye_color')->nullable();
             $table->string('occupation')->nullable();
             $table->string('next_of_kin')->nullable();
             $table->string('next_of_kin_phone')->nullable();
             $table->string("mother_maiden_name")->nullable();
-            $table->integer('validity_years')->nullable(); // e.g., 5 years
+            $table->integer('license_year')->nullable(); // e.g., 5 years
             $table->string('passport_photo')->nullable();
-            $table->date('issued_date')->nullable();
-            $table->date('expiry_date')->nullable();
             $table->timestamps();
         });
     }

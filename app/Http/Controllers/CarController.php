@@ -72,7 +72,7 @@ class CarController extends Controller
 
 
         if ($request->registration_status === 'registered') {
-            $existingCar = ar::where('user_id', $userId)->get();
+            $existingCar = Car::where('user_id', $userId)->get();
             foreach ($existingCar as $key => $car) {
                 if ($car->registration_no == $request->registration_no || $car->chasis_no == $request->chasis_no || $car->engine_no == $request->engine_no) {
                     return response()->json([
@@ -280,6 +280,8 @@ class CarController extends Controller
             Transaction::create([
                 'user_id' => Auth::user()->userId,
                 'transaction_id' => json_decode($result)->data->reference,
+                'amount' => $request->amount,
+                'transaction_description' => $request->transaction_description ?? null,
                 'status' => "pending"
             ]);
 
