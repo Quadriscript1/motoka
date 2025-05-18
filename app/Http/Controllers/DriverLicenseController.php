@@ -12,6 +12,9 @@ class DriverLicenseController extends Controller
 {
     public function store(Request $request)
     {
+        $request->validate([
+            'license_type' => 'required|in:new,renew',
+        ]);
          
         $baseRules = [
             'license_type' => 'required|in:new,renew',
