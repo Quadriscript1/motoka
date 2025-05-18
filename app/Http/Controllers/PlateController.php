@@ -10,7 +10,8 @@ class PlateController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(Plate::where('user_id',$request->userId)->get());
+         $userId= Auth::user()->userId;
+        return response()->json(Plate::where('user_id',$userId)->get());
     }
 
     public function store(Request $request)
