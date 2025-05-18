@@ -33,7 +33,7 @@ class DriverLicenseController extends Controller
             'next_of_kin'=>'nullable',
             'next_of_kin_phone'=>'nullable',
             'mother_maiden_name'=>'nullable',
-            'license_year' => 'required|date',
+            'license_year' => 'required',
             'passport_photo' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
         ];
         $renewRule =[
