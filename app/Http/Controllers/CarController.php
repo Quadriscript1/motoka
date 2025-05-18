@@ -259,7 +259,6 @@ class CarController extends Controller
             'email' => $request->email,
             'amount' => $request->amount
             ];
-
             $fields_string = http_build_query($fields);
 
             $ch = curl_init();
