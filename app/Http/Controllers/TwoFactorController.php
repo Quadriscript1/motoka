@@ -156,4 +156,14 @@ class TwoFactorController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'Invalid or expired code'], 422);
     }
+
+    public function check2faStatus(Request $request)
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'email_2fa' => $user->two_factor_type === 'email' ? 1 : 0,
+            'google_2fa' => $user->two_factor_type === 'google' ? 1 : 0,
+        ]);
+    }
 }
