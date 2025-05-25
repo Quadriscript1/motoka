@@ -55,13 +55,22 @@ class VerificationController extends Controller
 
         if ($request->email) {
             // Send OTP via Email
-            Mail::raw("Your verification code is: $verificationCode", function ($message) use ($user) {
-                $message->to($user->email)->subject('Email Verification Code');
-            });
+            try {
+                Log::info("Sending verification email to: " . $user->email);
+                Log::info("Verification code: " . $verificationCode);
+                Mail::raw("Your verification code is: $verificationCode", function ($message) use ($user) {
+                    $message->to($user->email)->subject('Email Verification Code');
+                });
+            } catch (\Exception $e) {
+                Log::error('Email sending failed: ' . $e->getMessage());
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to send verification email'
+                ], 500);
+            }
         } elseif ($request->phone_number) {
             // Send OTP via SMS (using Twilio or any SMS gateway)
             try {
-                // Example: Using Twilio (Replace with actual implementation)
                 $this->sendSms($contact, "Your verification code is: $verificationCode");
             } catch (\Exception $e) {
                 Log::error('SMS sending failed: ' . $e->getMessage());

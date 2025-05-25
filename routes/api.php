@@ -70,9 +70,9 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('/enable-email', [TwoFactorController::class, 'enableEmail2fa']);
             Route::post('/verify-email', [TwoFactorController::class, 'verifyEmail2fa']);
             Route::post('/disable', [TwoFactorController::class, 'disable2fa']);
+            Route::post('/check-2fa-status', [TwoFactorController::class, 'check2faStatus']);
         });
 
-        Route::post('/check-2fa-status', [TwoFactorController::class, 'check2faStatus']);
     });
 
     // Social authentication routes
