@@ -9,6 +9,7 @@ use App\Http\Controllers\PlateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\NotificationController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -144,3 +145,6 @@ Route::get('/get-expiration', function () {
 
 Route::middleware('auth:sanctum')->get('/reminders', [ReminderController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class, 'store']);
+
+Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
