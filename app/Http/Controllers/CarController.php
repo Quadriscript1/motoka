@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use App\Models\Transaction;
+use App\Models\Reminder;
+use Carbon\Carbon;
 
 class CarController extends Controller
 {
@@ -120,6 +122,17 @@ class CarController extends Controller
             }
 
             $car = Car::create($carData);
+
+           
+            $expirationDate = $request->expiry_date; 
+            $reminderDate = Carbon::parse($expirationDate)->subDays(30); 
+
+            Reminder::create([
+                'user_id' => $userId,
+                'type' => 'car',
+                'message' => 'Your car registration will expire in 30 days.',
+                'remind_at' => $reminderDate,
+            ]);
 
             return response()->json([
                 'status' => 'success',

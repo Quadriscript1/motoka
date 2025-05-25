@@ -8,6 +8,7 @@ use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\ReminderController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -140,3 +141,6 @@ Route::get('/get-expiration', function () {
 
     return response()->json($mtd);
 });
+
+Route::middleware('auth:sanctum')->get('/reminders', [ReminderController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class, 'store']);
