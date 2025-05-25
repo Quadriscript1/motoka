@@ -38,7 +38,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required_without:phone_number|string|email|max:255|unique:users,email',
             'phone_number' => 'required_without:email|string|unique:users,phone_number',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         // Custom message for either email or phone required
