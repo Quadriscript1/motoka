@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use App\Models\Transaction;
+use App\Models\Reminder;
+use Carbon\Carbon;
+use App\Models\Notification;
 
 class CarController extends Controller
 {
@@ -121,6 +124,24 @@ class CarController extends Controller
 
             $car = Car::create($carData);
 
+           
+            $expirationDate = $request->expiry_date; 
+            $reminderDate = Carbon::parse($expirationDate)->subDays(30); 
+
+            Reminder::create([
+                'user_id' => $userId,
+                'type' => 'car',
+                'message' => 'Your car registration will expire in 30 days.',
+                'remind_at' => $reminderDate,
+            ]);
+
+            Notification::create([
+                'user_id' => $userId,
+                'type' => 'car',
+                'action' => 'created',
+                'message' => 'Your car has been registered successfully.',
+            ]);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Car registered successfully',
@@ -220,6 +241,13 @@ class CarController extends Controller
 
         $car->update($request->all());
 
+        Notification::create([
+            'user_id' => $userId,
+            'type' => 'car',
+            'action' => 'updated',
+            'message' => 'Your car details have been updated successfully.',
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Car updated successfully',
@@ -244,6 +272,13 @@ class CarController extends Controller
         }
 
         $car->delete();
+
+        Notification::create([
+            'user_id' => $userId,
+            'type' => 'car',
+            'action' => 'deleted',
+            'message' => 'Your car has been deleted successfully.',
+        ]);
 
         return response()->json([
             'status' => 'success',

@@ -8,6 +8,8 @@ use App\Http\Controllers\DriverLicenseController;
 use App\Http\Controllers\PlateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\NotificationController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -70,9 +72,9 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('/enable-email', [TwoFactorController::class, 'enableEmail2fa']);
             Route::post('/verify-email', [TwoFactorController::class, 'verifyEmail2fa']);
             Route::post('/disable', [TwoFactorController::class, 'disable2fa']);
+            Route::post('/check-2fa-status', [TwoFactorController::class, 'check2faStatus']);
         });
 
-        Route::post('/check-2fa-status', [TwoFactorController::class, 'check2faStatus']);
     });
 
     // Social authentication routes
@@ -140,3 +142,9 @@ Route::get('/get-expiration', function () {
 
     return response()->json($mtd);
 });
+
+Route::middleware('auth:sanctum')->get('/reminders', [ReminderController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class, 'store']);
+
+Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
