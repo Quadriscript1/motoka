@@ -128,10 +128,20 @@ class CarController extends Controller
             $expirationDate = $request->expiry_date; 
             $reminderDate = Carbon::parse($expirationDate)->subDays(30); 
 
+            
+            $daysUntilExpiration = Carbon::parse($expirationDate)->diffInDays(now());
+
+            if ($daysUntilExpiration <= 0) {
+               
+                $message = 'Your car registration has expired.';
+            } else {
+                $message = "Your car registration will expire in {$daysUntilExpiration} days.";
+            }
+
             Reminder::create([
                 'user_id' => $userId,
                 'type' => 'car',
-                'message' => 'Your car registration will expire in 30 days.',
+                'message' => $message,
                 'remind_at' => $reminderDate,
             ]);
 
