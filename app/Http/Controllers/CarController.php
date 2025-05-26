@@ -207,8 +207,8 @@ class CarController extends Controller
      */
     public function update(Request $request,$id)
     {
-        $user_id = Auth::user()->userId;
-        $car = Car::where('user_id', $user_id)
+        $userId = Auth::user()->userId;
+        $car = Car::where('user_id', $userId)
             ->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -270,8 +270,8 @@ class CarController extends Controller
      */
     public function destroy($id)
     {
-        $user_id = Auth::user()->userId;
-        $car = Car::where('user_id', $user_id)
+        $userId = Auth::user()->userId;
+        $car = Car::where('user_id', $userId)
             ->findOrFail($id);
 
         // Delete associated documents
