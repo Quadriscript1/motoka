@@ -249,7 +249,28 @@ class CarController extends Controller
             $car->document_images = $documentImages;
         }
 
+       
         $car->update($request->all());
+
+       
+        $expirationDate = $request->expiry_date; 
+        $reminderDate = Carbon::parse($expirationDate)->subDays(30); 
+
+       
+        $daysUntilExpiration = Carbon::parse($expirationDate)->diffInDays(now());
+
+        if ($daysUntilExpiration <= 0) {
+           
+            $message = 'Your car registration has expired.';
+        } else {
+            $message = "Your car registration will expire in {$daysUntilExpiration} days.";
+        }
+
+       
+        Reminder::updateOrCreate(
+            ['user_id' => $userId, 'type' => 'car', 'message' => $message],
+            ['remind_at' => $reminderDate]
+        );
 
         Notification::create([
             'user_id' => $userId,
