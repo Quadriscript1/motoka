@@ -16,7 +16,8 @@ class Car extends Model
 
     protected $dates = [
         'date_issued',
-        'expiry_date'
+        'expiry_date',
+        'deleted_at',
     ];
 
     protected $casts = [
