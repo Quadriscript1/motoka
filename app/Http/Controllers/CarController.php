@@ -125,25 +125,13 @@ class CarController extends Controller
             $car = Car::create($carData);
 
            
-            $expirationDate = $request->expiry_date; 
-            $reminderDate = Carbon::parse($expirationDate)->subDays(30); 
-
-            
-            $daysUntilExpiration = Carbon::parse($expirationDate)->diffInDays(now());
-
-            if ($daysUntilExpiration <= 0) {
-               
-                $message = 'Your car registration has expired.';
+           
+            if ($request->registration_status === 'registered' && $request->expiry_date) {
+                $this->handleReminder($userId, $request->expiry_date, 'car', $car->id);
             } else {
-                $message = "Your car registration will expire in {$daysUntilExpiration} days.";
+                $this->deleteReminder($userId, 'car'); 
             }
-
-            Reminder::create([
-                'user_id' => $userId,
-                'type' => 'car',
-                'message' => $message,
-                'remind_at' => $reminderDate,
-            ]);
+            
 
             Notification::create([
                 'user_id' => $userId,
@@ -249,28 +237,11 @@ class CarController extends Controller
             $car->document_images = $documentImages;
         }
 
-       
         $car->update($request->all());
 
-       
-        $expirationDate = $request->expiry_date; 
-        $reminderDate = Carbon::parse($expirationDate)->subDays(30); 
-
-       
-        $daysUntilExpiration = Carbon::parse($expirationDate)->diffInDays(now());
-
-        if ($daysUntilExpiration <= 0) {
-           
-            $message = 'Your car registration has expired.';
-        } else {
-            $message = "Your car registration will expire in {$daysUntilExpiration} days.";
+        if ($request->has('expiry_date')) {
+            $this->handleReminder($userId, $request->expiry_date, 'car', $car->id);
         }
-
-       
-        Reminder::updateOrCreate(
-            ['user_id' => $userId, 'type' => 'car', 'message' => $message],
-            ['remind_at' => $reminderDate]
-        );
 
         Notification::create([
             'user_id' => $userId,
@@ -284,6 +255,47 @@ class CarController extends Controller
             'message' => 'Car updated successfully',
             'car' => $car
         ]);
+    }
+
+
+    private function handleReminder($userId, $expiryDate, $type, $carId = null)
+    {
+        $expirationDate = Carbon::parse($expiryDate)->startOfDay();
+        $today = now()->startOfDay();
+        $daysUntilExpiration = $today->diffInDays($expirationDate, false); 
+
+        if ($daysUntilExpiration > 30) {
+            
+            return;
+        }
+
+       
+        if ($daysUntilExpiration < 0) {
+            $message = 'Your car registration has expired.';
+            $remindAt = $today;
+        } elseif ($daysUntilExpiration === 0) {
+            $message = 'Your car registration expires today.';
+            $remindAt = $today;
+        } elseif ($daysUntilExpiration === 1) {
+            $message = 'Your car registration will expire in 1 day.';
+            $remindAt = $today;
+        } else {
+            $message = "Your car registration will expire in {$daysUntilExpiration} days.";
+            $remindAt = $today;
+        }
+
+        Reminder::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'type' => $type,
+                'car_id' => $carId, // Ensure carId is passed if needed
+            ],
+            [
+                'message' => $message,
+                'remind_at' => $remindAt->format('Y-m-d H:i:s'),
+                'is_sent' => 0,
+            ]
+        );
     }
 
     /**
