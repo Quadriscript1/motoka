@@ -15,7 +15,7 @@ return new class extends Migration
         $table->id();
         $table->string('user_id', 6);
         $table->foreign('user_id')->references('userId')->on('users')->onDelete('cascade');
-        $table->string('transaction_id')->unique();
+        $table->string('transaction_id')->change();
         $table->string('transaction_description')->nullable();
         $table->double('amount',15,2)->default(0);
         $table->enum('status',['pending', 'success', 'failed'])->default('pending');

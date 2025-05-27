@@ -331,6 +331,7 @@ class CarController extends Controller
 
     public function InsertDetail(Request $request)
     {
+
         $url = "https://api.paystack.co/transaction/initialize";
         $fields = [
             'email' => $request->email,
@@ -370,7 +371,7 @@ class CarController extends Controller
         $transaction_id = $request->transaction_id; 
     
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('PAYSTACK_PRIVATE_KEY'),
+            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
             'Content-Type' => 'application/json',
             'Cache-Control' => 'no-cache',
         ])->get("https://api.paystack.co/transaction/verify/{$transaction_id}");
