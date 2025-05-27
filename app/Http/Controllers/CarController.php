@@ -258,54 +258,85 @@ class CarController extends Controller
     }
 
 
-    private function handleReminder($userId, $expiryDate, $type, $carId = null)
-    {
-        $expirationDate = Carbon::parse($expiryDate)->startOfDay();
-        $today = now()->startOfDay();
-        $daysUntilExpiration = $today->diffInDays($expirationDate, false); 
+    private function handleReminder($userId, $expiryDate, $type, $refId)
+{
+        $reminderDate = Carbon::parse($expiryDate)->startOfDay();
+        $now = Carbon::now()->startOfDay();
 
-        if ($daysUntilExpiration > 30) {
-            
+        $daysLeft = $now->diffInDays($reminderDate, false);
+
+        // Handle expired
+        if ($daysLeft < 0) {
+            Reminder::updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'type' => $type,
+                    'ref_id' => $refId,
+                ],
+                [
+                    'message' => 'Your car has expired. Please renew your car.',
+                    'remind_at' => $now->format('Y-m-d H:i:s'),
+                    'is_sent' => false
+                ]
+            );
             return;
         }
 
-       
-        if ($daysUntilExpiration < 0) {
-            $message = 'Your car registration has expired.';
-            $remindAt = $today;
-        } elseif ($daysUntilExpiration === 0) {
-            $message = 'Your car registration expires today.';
-            $remindAt = $today;
-        } elseif ($daysUntilExpiration === 1) {
-            $message = 'Your car registration will expire in 1 day.';
-            $remindAt = $today;
-        } else {
-            $message = "Your car registration will expire in {$daysUntilExpiration} days.";
-            $remindAt = $today;
+        // Handle expiring today
+        if ($daysLeft === 0) {
+            Reminder::updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'type' => $type,
+                    'ref_id' => $refId,
+                ],
+                [
+                    'message' => 'Your car will expire today.',
+                    'remind_at' => $now->format('Y-m-d H:i:s'),
+                    'is_sent' => false
+                ]
+            );
+            return;
         }
+
+        // If > 30 days, no reminder
+        if ($daysLeft > 30) {
+            Reminder::where('user_id', $userId)
+                ->where('type', $type)
+                ->where('ref_id', $refId)
+                ->delete();
+            return;
+        }
+
+        // Between 1 and 30 days: send countdown reminder
+        $message = "Your car registration will expire in {$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ".";
 
         Reminder::updateOrCreate(
             [
                 'user_id' => $userId,
                 'type' => $type,
-                'car_id' => $carId, // Ensure carId is passed if needed
+                'ref_id' => $refId,
             ],
             [
                 'message' => $message,
-                'remind_at' => $remindAt->format('Y-m-d H:i:s'),
-                'is_sent' => 0,
+                'remind_at' => $now->format('Y-m-d H:i:s'),
+                'is_sent' => false
             ]
         );
     }
 
+
+
+
     /**
      * Delete a car
      */
+   
+
     public function destroy($id)
     {
         $userId = Auth::user()->userId;
-        $car = Car::where('user_id', $userId)
-            ->findOrFail($id);
+        $car = Car::where('user_id', $userId)->findOrFail($id);
 
         // Delete associated documents
         if (!empty($car->document_images)) {
@@ -314,8 +345,16 @@ class CarController extends Controller
             }
         }
 
+        // Delete the car
         $car->delete();
 
+
+        Reminder::where('user_id', $userId)
+            ->where('type', 'car')
+            ->where('ref_id', $id) 
+            ->delete();
+
+        // Optional: record a notification
         Notification::create([
             'user_id' => $userId,
             'type' => 'car',
@@ -328,6 +367,7 @@ class CarController extends Controller
             'message' => 'Car deleted successfully'
         ]);
     }
+
 
     public function InsertDetail(Request $request)
     {
