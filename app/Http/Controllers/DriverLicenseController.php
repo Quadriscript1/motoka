@@ -131,7 +131,7 @@ class DriverLicenseController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Group notifications by date
+       
         $groupedNotifications = [];
         foreach ($notifications as $notification) {
             $date = $notification->created_at->format('Y-m-d');
@@ -145,7 +145,7 @@ class DriverLicenseController extends Controller
             'status' => 'success',
             'message' => 'Licenses registered successfully',
             'car' => $license,
-            'notifications' => $groupedNotifications, // Return grouped notifications
+            'notifications' => $groupedNotifications, 
         ]);
     }
 

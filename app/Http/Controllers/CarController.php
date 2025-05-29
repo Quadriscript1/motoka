@@ -134,7 +134,7 @@ class CarController extends Controller
                 $this->deleteReminder($userId, 'car', $car->id);
             }
 
-            // Create notification for car registration
+           
             Notification::create([
                 'user_id' => $userId,
                 'type' => 'car',
@@ -142,12 +142,12 @@ class CarController extends Controller
                 'message' => 'Your car has been registered successfully.',
             ]);
 
-            // Fetch notifications for the user
+           
             $notifications = Notification::where('user_id', $userId)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Group notifications by date
+          
             $groupedNotifications = [];
             foreach ($notifications as $notification) {
                 $date = $notification->created_at->format('Y-m-d');
@@ -161,10 +161,10 @@ class CarController extends Controller
                 'status' => 'success',
                 'message' => 'Car registered successfully',
                 'car' => $car,
-                'notifications' => $groupedNotifications, // Return grouped notifications
+                'notifications' => $groupedNotifications, 
             ]);
         } catch (\Exception $e) {
-            // Clean up uploaded files if car creation fails
+           
             foreach ($documentImages as $path) {
                 Storage::disk('public')->delete($path);
             }
