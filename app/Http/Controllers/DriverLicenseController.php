@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Notification;
 
 class DriverLicenseController extends Controller
 {
@@ -98,8 +99,15 @@ class DriverLicenseController extends Controller
                 'license_year' => $request->license_year,
                 'passport_photo' => $passportPath
             ]);
-        }
 
+            // Create notification for new license
+            Notification::create([
+                'user_id' => $userId,
+                'type' => 'license',
+                'action' => 'created',
+                'message' => 'Your license has been registered successfully.',
+            ]);
+        }
 
         if ($request->license_type === 'renew') {
             $license = DriverLicense::create([
@@ -107,16 +115,38 @@ class DriverLicenseController extends Controller
                 'license_type' => $request->license_type,
                 'license_number' => $request->license_number,
                 'date_of_birth' => $request->date_of_birth,
-               
+            ]);
+
+            // Create notification for license renewal
+            Notification::create([
+                'user_id' => $userId,
+                'type' => 'license',
+                'action' => 'renewed',
+                'message' => 'Your license has been renewed successfully.',
             ]);
         }
-        
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Licenses registered successfully',
-                'car' => $license
-            ]);
+        // Fetch notifications for the user
+        $notifications = Notification::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Group notifications by date
+        $groupedNotifications = [];
+        foreach ($notifications as $notification) {
+            $date = $notification->created_at->format('Y-m-d');
+            if (!isset($groupedNotifications[$date])) {
+                $groupedNotifications[$date] = [];
+            }
+            $groupedNotifications[$date][] = $notification;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Licenses registered successfully',
+            'car' => $license,
+            'notifications' => $groupedNotifications, // Return grouped notifications
+        ]);
     }
 
     public function index()

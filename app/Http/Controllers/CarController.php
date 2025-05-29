@@ -134,6 +134,7 @@ class CarController extends Controller
                 $this->deleteReminder($userId, 'car', $car->id);
             }
 
+            // Create notification for car registration
             Notification::create([
                 'user_id' => $userId,
                 'type' => 'car',
@@ -141,10 +142,26 @@ class CarController extends Controller
                 'message' => 'Your car has been registered successfully.',
             ]);
 
+            // Fetch notifications for the user
+            $notifications = Notification::where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Group notifications by date
+            $groupedNotifications = [];
+            foreach ($notifications as $notification) {
+                $date = $notification->created_at->format('Y-m-d');
+                if (!isset($groupedNotifications[$date])) {
+                    $groupedNotifications[$date] = [];
+                }
+                $groupedNotifications[$date][] = $notification;
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Car registered successfully',
-                'car' => $car
+                'car' => $car,
+                'notifications' => $groupedNotifications, // Return grouped notifications
             ]);
         } catch (\Exception $e) {
             // Clean up uploaded files if car creation fails
@@ -292,7 +309,9 @@ class CarController extends Controller
         $car->delete();
     
         // Delete associated reminders
-        $this->deleteReminder($userId, 'car', $car->id);
+        Reminder::where('user_id', $userId)
+            ->where('ref_id', $id) // Assuming ref_id is the car ID
+            ->delete();
     
         // Optional: record a notification
         Notification::create([
@@ -304,7 +323,7 @@ class CarController extends Controller
     
         return response()->json([
             'status' => 'success',
-            'message' => 'Car deleted successfully'
+            'message' => 'Car and associated reminders deleted successfully.'
         ]);
     }
 
@@ -402,13 +421,8 @@ class CarController extends Controller
     //Reminder Function
     private function handleReminder($userId, $expiryDate, $type, $refId)
     {
-
-        $car = Car::find($refId);
-        if (!$car || $car->deleted_at) return;
-
         $reminderDate = Carbon::parse($expiryDate)->startOfDay();
         $now = Carbon::now()->startOfDay();
-
         $daysLeft = $now->diffInDays($reminderDate, false);
 
         // Handle expired
@@ -428,7 +442,7 @@ class CarController extends Controller
             return;
         }
 
-            // Handle expiring today
+        // Handle expiring today
         if ($daysLeft === 0) {
             Reminder::updateOrCreate(
                 [
@@ -455,7 +469,7 @@ class CarController extends Controller
         }
 
         // Between 1 and 30 days: send countdown reminder
-        $message = "Your car registration will expire in {$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ".";
+        $message = "Expires in {$daysLeft} days" . ($daysLeft > 1 ? 's' : '') . ".";
 
         Reminder::updateOrCreate(
             [
