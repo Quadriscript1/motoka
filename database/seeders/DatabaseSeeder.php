@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserTypeSeeder::class,
             CarTypeSeeder::class,
-            CountrySeeder::class
+            CountrySeeder::class,
+            RoleSeeder::class
         ]);
 
         $admin = array(

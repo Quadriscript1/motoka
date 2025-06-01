@@ -12,6 +12,7 @@
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.10.1",
         "pragmarx/google2fa-laravel": "^2.3",
+        "spatie/laravel-permission": "^6.0",
         "twilio/sdk": "^8.4",
         "tymon/jwt-auth": "^2.2"
     },
