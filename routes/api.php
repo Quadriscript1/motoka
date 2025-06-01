@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AclController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\CarTypeController;
@@ -20,7 +21,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login')->name('login');
     Route::post('login2', 'login2')->name('login2');
 
-     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/reset-password', [AuthController::class, 'reset']);
 
@@ -53,7 +54,7 @@ Route::controller(AuthController::class)->group(function () {
 
 
         Route::prefix('car')->group(function () {
-            Route::post('reg', [CarController::class, 'register']);      
+            Route::post('reg', [CarController::class, 'register']);
             Route::get('get-cars/', [CarController::class, 'getMyCars']);
             Route::get('cars/{id}', [CarController::class, 'show']);
             Route::put('cars/{id}', [CarController::class, 'update']);
@@ -74,7 +75,6 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('/disable', [TwoFactorController::class, 'disable2fa']);
             Route::post('/check-2fa-status', [TwoFactorController::class, 'check2faStatus']);
         });
-
     });
 
     // Social authentication routes
@@ -91,8 +91,8 @@ Route::controller(AuthController::class)->group(function () {
 // });
 
 Route::prefix('verify')->group(function () {
-    Route::post('email/verify/send', [VerificationController::class, 'sendVerification']);      
-    Route::post('email/verify/resend', [VerificationController::class, 'resendEmailVerification']);   
+    Route::post('email/verify/send', [VerificationController::class, 'sendVerification']);
+    Route::post('email/verify/resend', [VerificationController::class, 'resendEmailVerification']);
     Route::post('user/verify', [VerificationController::class, 'verifyUser']);
 });
 
@@ -105,7 +105,7 @@ Route::prefix('verify')->group(function () {
 //     Route::delete('cars/{id}', 'destroy');
 //     Route::post('initiate', 'InsertDetail');
 //     Route::post('verify', 'Verification');
-    
+
 // });
 
 
@@ -148,3 +148,28 @@ Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class
 
 Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
+
+
+Route::prefix('acl')->name('acl.')->group(function () {
+    Route::prefix('user')->name('user.')->group(function () {
+        Route::match(['GET', 'POST'], '/', [AclController::class, 'get_paginated_user'])->name('index');
+        Route::put('/{user_id}/permission', [AclController::class, 'attach_permission_to_user'])->name('permission');
+        Route::get('/{user_id}/roles', [AclController::class, 'role_with_user_has_role'])->name('roles');
+        Route::put('/{user_id}/role', [AclController::class, 'attach_role_to_user'])->name('role');
+    });
+
+    Route::prefix('role')->name('role.')->group(function () {
+        Route::get('/', [AclController::class, 'getAllRoles'])->name('index');
+        Route::post('/create', [AclController::class, 'create_role'])->name('create');
+        Route::put('/{role_id}/permission', [AclController::class, 'attach_permission_to_role'])->name('attach_permission');
+        Route::put('/{role_id}', [AclController::class, 'update_role'])->name('update');
+        Route::get('/{role_id}/permissions', [AclController::class, 'get_role_permissions'])->name('permissions');
+    });
+
+    Route::prefix('permission')->name('permission.')->group(function () {
+        Route::get('/all', [AclController::class, 'get_all_permission'])->name('index');
+        Route::get('/permission_with_perm_has_role/{role_id}', [AclController::class, 'permission_with_perm_has_role'])->name('permission_with_perm_has_role');
+        Route::get('/permission_with_user_has_perm/{user_id}', [AclController::class, 'permission_with_user_has_perm'])->name('permission_with_user_has_perm');
+    });
+});
