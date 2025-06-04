@@ -14,6 +14,7 @@ use App\Http\Controllers\NotificationController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+// use Illuminate\Support\Facades\Mail;
 
 // Public authentication routes
 Route::controller(AuthController::class)->group(function () {
@@ -143,8 +144,10 @@ Route::get('/get-expiration', function () {
     return response()->json($mtd);
 });
 
-Route::middleware('auth:sanctum')->get('/reminders', [ReminderController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/reminder', [ReminderController::class, 'index']);
+
+
+
 
 Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);

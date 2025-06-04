@@ -161,7 +161,6 @@ class CarController extends Controller
                 'status' => 'success',
                 'message' => 'Car registered successfully',
                 'car' => $car,
-                'notifications' => $groupedNotifications, 
             ]);
         } catch (\Exception $e) {
            
