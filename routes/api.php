@@ -144,8 +144,10 @@ Route::get('/get-expiration', function () {
     return response()->json($mtd);
 });
 
-Route::middleware('auth:sanctum')->get('/reminders', [ReminderController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/reminder', [ReminderController::class, 'index']);
+
+
+
 
 Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);

@@ -9,28 +9,28 @@ use Illuminate\Support\Facades\Auth;
 class ReminderController extends Controller
 {
     // Fetch a single reminder for a specific car
-    public function index(Request $request, $carId)
+    public function index(Request $request)
     {
         // Get the authenticated user
         $userId = Auth::user()->userId;
 
-        // Fetch the reminder for the specific car
+        // Fetch the most recent reminder for expired cars
         $reminder = Reminder::where('user_id', $userId)
-            ->where('ref_id', $carId) // Assuming ref_id is the car ID
-            ->where('is_sent', false) // Optionally filter out sent reminders
-            ->first();
+            ->where('is_sent', false) 
+            ->orderBy('created_at', 'desc')
+            ->first(); 
 
-        if ($reminder) {
+        if (!$reminder) {
             return response()->json([
                 'status' => 'success',
-                'data' => $reminder,
+                'message' => 'No reminders found.',
             ]);
         }
 
         return response()->json([
-            'status' => 'error',
-            'message' => 'No reminder found for this car.',
-        ], 404);
+            'status' => 'success',
+            'data' => $reminder, 
+        ]);
     }
 
     // Update an existing reminder

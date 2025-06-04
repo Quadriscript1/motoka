@@ -18,9 +18,27 @@ class NotificationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Format notifications by date
+        $groupedNotifications = [];
+        foreach ($notifications as $notification) {
+            // Convert to local timezone
+            $localCreatedAt = $notification->created_at->setTimezone(config('app.timezone'));
+            $localUpdatedAt = $notification->updated_at->setTimezone(config('app.timezone'));
+
+            // Update the notification object with local timestamps
+            $notification->created_at = $localCreatedAt;
+            $notification->updated_at = $localUpdatedAt;
+
+            $date = $localCreatedAt->format('Y-m-d');
+            if (!isset($groupedNotifications[$date])) {
+                $groupedNotifications[$date] = [];
+            }
+            $groupedNotifications[$date][] = $notification;
+        }
+
         return response()->json([
             'status' => 'success',
-            'data' => $notifications,
+            'data' => $groupedNotifications, 
         ]);
     }
 

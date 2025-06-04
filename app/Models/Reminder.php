@@ -15,5 +15,12 @@ class Reminder extends Model
         'message',
         'remind_at',
         'is_sent',
+        'ref_id', // This was missing - needed to link reminder to specific car
     ];
+
+    // Add relationship to Car model
+    public function car()
+    {
+        return $this->belongsTo(Car::class, 'ref_id');
+    }
 }
