@@ -11,9 +11,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MonicreditPaymentController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+
 // use Illuminate\Support\Facades\Mail;
 
 // Public authentication routes
@@ -63,6 +65,11 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('initiate', [CarController::class, 'InsertDetail']);
             Route::post('verify', [CarController::class, 'Verification']);
         });
+
+
+        Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
+        Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
+
 
         Route::get('/car-types', [CarTypeController::class, 'index']);
 
@@ -176,3 +183,6 @@ Route::prefix('acl')->name('acl.')->group(function () {
         Route::get('/permission_with_user_has_perm/{user_id}', [AclController::class, 'permission_with_user_has_perm'])->name('permission_with_user_has_perm');
     });
 });
+
+Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
+Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
