@@ -161,7 +161,6 @@ class CarController extends Controller
                 'status' => 'success',
                 'message' => 'Car registered successfully',
                 'car' => $car,
-                'notifications' => $groupedNotifications, 
             ]);
         } catch (\Exception $e) {
            
@@ -418,59 +417,21 @@ class CarController extends Controller
 
 
 
-    //Reminder Function
-    private function handleReminder($userId, $expiryDate, $type, $refId)
-    {
-        $reminderDate = Carbon::parse($expiryDate)->startOfDay();
-        $now = Carbon::now()->startOfDay();
-        $daysLeft = $now->diffInDays($reminderDate, false);
+   // Updated handleReminder function for CarController.php
+private function handleReminder($userId, $expiryDate, $type, $refId)
+{
+    // Parse the expiry date and get current date
+    $reminderDate = Carbon::parse($expiryDate)->startOfDay();
+    $now = Carbon::now()->startOfDay();
+    $daysLeft = $now->diffInDays($reminderDate, false);
 
-        // Handle expired
-        if ($daysLeft < 0) {
-            Reminder::updateOrCreate(
-                [
-                    'user_id' => $userId,
-                    'type' => $type,
-                    'ref_id' => $refId,
-                ],
-                [
-                    'message' => 'Your car has expired. Please renew your car.',
-                    'remind_at' => $now->format('Y-m-d H:i:s'),
-                    'is_sent' => false
-                ]
-            );
-            return;
-        }
+    // Log for debugging
+    // \Log::info("Processing reminder for user: {$userId}, car: {$refId}, expiry: {$expiryDate}, days left: {$daysLeft}");
 
-        // Handle expiring today
-        if ($daysLeft === 0) {
-            Reminder::updateOrCreate(
-                [
-                    'user_id' => $userId,
-                    'type' => $type,
-                    'ref_id' => $refId,
-                ],
-                [
-                    'message' => 'Your car will expire today.',
-                    'remind_at' => $now->format('Y-m-d H:i:s'),
-                    'is_sent' => false
-                ]
-            );
-            return;
-        }
-
-        // If > 30 days, no reminder
-        if ($daysLeft > 30) {
-            Reminder::where('user_id', $userId)
-                ->where('type', $type)
-                ->where('ref_id', $refId)
-                ->delete();
-            return;
-        }
-
-        // Between 1 and 30 days: send countdown reminder
-        $message = "Expires in {$daysLeft} days" . ($daysLeft > 1 ? 's' : '') . ".";
-
+    // Handle expired (negative days)
+    if ($daysLeft < 0) {
+        $message = 'Your car registration has expired. Please renew immediately.';
+        
         Reminder::updateOrCreate(
             [
                 'user_id' => $userId,
@@ -483,13 +444,69 @@ class CarController extends Controller
                 'is_sent' => false
             ]
         );
+        
+        // \Log::info("Created EXPIRED reminder for car {$refId}: {$message}");
+        return;
     }
 
-    private function deleteReminder($userId, $type, $refId)
-    {
+    // Handle expiring today
+    if ($daysLeft === 0) {
+        $message = 'Your car registration expires today! Please renew now.';
+        
+        Reminder::updateOrCreate(
+            [
+                'user_id' => $userId,
+                'type' => $type,
+                'ref_id' => $refId,
+            ],
+            [
+                'message' => $message,
+                'remind_at' => $now->format('Y-m-d H:i:s'),
+                'is_sent' => false
+            ]
+        );
+        
+        // \Log::info("Created TODAY reminder for car {$refId}: {$message}");
+        return;
+    }
+
+    // If more than 30 days, delete existing reminders
+    if ($daysLeft > 30) {
         Reminder::where('user_id', $userId)
             ->where('type', $type)
             ->where('ref_id', $refId)
             ->delete();
+        
+        // \Log::info("Deleted reminder for car {$refId} - more than 30 days left");
+        return;
     }
+
+    // Between 1 and 30 days: send countdown reminder
+    $message = "Expires in {$daysLeft} day" . ($daysLeft > 1 ? 's' : '') . ".";
+
+    Reminder::updateOrCreate(
+        [
+            'user_id' => $userId,
+            'type' => $type,
+            'ref_id' => $refId,
+        ],
+        [
+            'message' => $message,
+            'remind_at' => $now->format('Y-m-d H:i:s'),
+            'is_sent' => false
+        ]
+    );
+    
+    // Log::info("Created COUNTDOWN reminder for car {$refId}: {$message}");
+}
+
+private function deleteReminder($userId, $type, $refId)
+{
+    $deleted = Reminder::where('user_id', $userId)
+        ->where('type', $type)
+        ->where('ref_id', $refId)
+        ->delete();
+    
+    // \Log::info("Deleted {$deleted} reminders for user {$userId}, type {$type}, ref_id {$refId}");
+}
 }

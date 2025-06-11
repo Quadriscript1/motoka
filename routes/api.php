@@ -11,9 +11,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\MonicreditPaymentController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+
+// use Illuminate\Support\Facades\Mail;
 
 // Public authentication routes
 Route::controller(AuthController::class)->group(function () {
@@ -62,6 +65,11 @@ Route::controller(AuthController::class)->group(function () {
             Route::post('initiate', [CarController::class, 'InsertDetail']);
             Route::post('verify', [CarController::class, 'Verification']);
         });
+
+
+        Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
+        Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
+
 
         Route::get('/car-types', [CarTypeController::class, 'index']);
 
@@ -143,8 +151,10 @@ Route::get('/get-expiration', function () {
     return response()->json($mtd);
 });
 
-Route::middleware('auth:sanctum')->get('/reminders', [ReminderController::class, 'index']);
-Route::middleware('auth:sanctum')->post('/reminders', [ReminderController::class, 'store']);
+Route::middleware('auth:sanctum')->get('/reminder', [ReminderController::class, 'index']);
+
+
+
 
 Route::middleware('auth:sanctum')->get('/notifications', [NotificationController::class, 'index']);
 Route::middleware('auth:sanctum')->post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
@@ -173,3 +183,6 @@ Route::prefix('acl')->name('acl.')->group(function () {
         Route::get('/permission_with_user_has_perm/{user_id}', [AclController::class, 'permission_with_user_has_perm'])->name('permission_with_user_has_perm');
     });
 });
+
+Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
+Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
