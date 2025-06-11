@@ -10,7 +10,7 @@ class MonicreditPaymentController extends Controller
 {
     public function initializePayment(Request $request)
     {
-        $response = Http::post(env('MONICREDIT_BASE_URL') . '/v1/payment/transactions/init-transaction', [
+        $response = Http::post(env('MONICREDIT_BASE_URL') . '/payment/transactions/init-transaction', [
             'order_id' => $request->order_id,
             'public_key' => env('MONICREDIT_PUBLIC_KEY'),
             'customer' => [
@@ -31,29 +31,15 @@ class MonicreditPaymentController extends Controller
 
     public function verifyPayment(Request $request)
     {
-        $transactionId = $request->query('transaction_id');
+        $transactionId = $request->transaction_id;
         $privateKey = env('MONICREDIT_PRIVATE_KEY');
 
-
-        
-        // Log the parameters for debugging
-        // Log::info('Verifying Payment with:', [
-        //     'transaction_id' => $transactionId,
-        //     'private_key' => $privateKey,
-        // ]);
-
-        $response = Http::get(env('MONICREDIT_BASE_URL') . '/v1/payment/transactions/verify-transaction', [
+        $response = Http::post(env('MONICREDIT_BASE_URL') . '/payment/transactions/verify-transaction', [
             'transaction_id' => $transactionId,
             'private_key' => $privateKey,
         ]);
 
-        // Log the full response for debugging
-        // Log::info('Monicredit Verify Payment Full Response:', [
-        //     'status' => $response->status(),
-        //     'body' => $response->body(),
-        //     'json' => $response->json(),
-        // ]);
-
+        dd($response->json());
         return $response->json();
     }
 }
