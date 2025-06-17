@@ -430,7 +430,7 @@ private function handleReminder($userId, $expiryDate, $type, $refId)
 
     // Handle expired (negative days)
     if ($daysLeft < 0) {
-        $message = 'Your car registration has expired. Please renew immediately.';
+        $message = 'License Expiered.';
         
         Reminder::updateOrCreate(
             [
