@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\Lga;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +13,7 @@ use App\Models\Transaction;
 use App\Models\Reminder;
 use Carbon\Carbon;
 use App\Models\Notification;
+use App\Models\State;
 
 class CarController extends Controller
 {
@@ -508,5 +510,20 @@ private function deleteReminder($userId, $type, $refId)
         ->delete();
     
     // \Log::info("Deleted {$deleted} reminders for user {$userId}, type {$type}, ref_id {$refId}");
+}
+
+public function getAllState(Request $request) {
+    $states = State::all();
+    return response()->json([
+        'status' => true,
+        'data' => $states
+    ], 200);
+}
+public function getLgaByState($state_id) {
+    $lgas = Lga::where('state_id', $state_id)->get();
+    return response()->json([
+        'status' => true ,
+        'data' =>  $lgas
+    ], 200);
 }
 }
