@@ -70,6 +70,9 @@ Route::controller(AuthController::class)->group(function () {
             Route::delete('cars/{id}', [CarController::class, 'destroy']);
             Route::post('initiate', [CarController::class, 'InsertDetail']);
             Route::post('verify', [CarController::class, 'Verification']);
+            Route::get('get-all-state', [CarController::class, 'getAllState']);
+            Route::get('get-lga/{state_id}', [CarController::class, 'getLgaByState']);
+
         });
 
 
