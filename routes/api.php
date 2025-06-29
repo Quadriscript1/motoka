@@ -14,9 +14,11 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MonicreditPaymentController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentScheduleController;
+use App\Http\Controllers\KycController;
 use App\Models\Car;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+
 
 // use Illuminate\Support\Facades\Mail;
 
@@ -36,6 +38,8 @@ Route::controller(AuthController::class)->group(function () {
         Route::post('logout2', 'logout2')->name('logout2');
         Route::post('refresh', 'refresh')->name('refresh');
 
+        Route::post('/kyc', [KycController::class, 'store']);
+        Route::get('/kyc', [KycController::class, 'index']);
 
         Route::prefix('licenses')->group(function () {
             Route::post('/apply', [DriverLicenseController::class, 'store']); // Apply for license
