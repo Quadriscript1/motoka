@@ -21,6 +21,11 @@ class AclController extends Controller
 
     public function create_role(Request $request)
     {
+
+        $request->validate([
+            'name' => 'required',
+            'description' => 'required',
+        ]);
         $role = Role::create([
             'name' => $request->input('name'),
             'description' => $request->input('description')
@@ -37,6 +42,11 @@ class AclController extends Controller
 
     public function update_role(Request $request, $id)
     {
+
+          $request->validate([
+            'name' => 'required',
+            'description' => 'required',
+        ]);
         $role = Role::where('id', $id)->first();
         $previous_role = Role::where('id', $id)->first();
         $role->name = $request->input('name');
