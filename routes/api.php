@@ -12,6 +12,8 @@ use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MonicreditPaymentController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentScheduleController;
 use App\Http\Controllers\KycController;
 use App\Models\Car;
 use Carbon\Carbon;
@@ -71,8 +73,26 @@ Route::controller(AuthController::class)->group(function () {
         });
 
 
-        Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
-        Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
+        Route::prefix('payment-schedule')->group(function () {
+            Route::get('/', [PaymentScheduleController::class, 'getAllPaymentSchedule']);
+            Route::post('/create', [PaymentScheduleController::class, 'store']);
+            Route::get('/get-payment-head', [PaymentScheduleController::class, 'getAllPaymentHead']);
+            Route::post('/get-payment-schedule', [PaymentScheduleController::class, 'getPaymentScheduleByPaymenthead']);
+
+        });
+
+
+        Route::prefix('payment')->group(function () {
+            Route::post('/initialize', [PaymentController::class, 'initializePayment']);
+            Route::post('/verify-payment/{transaction_id}', [PaymentController::class, 'verifyPayment']);
+          
+
+        });
+      
+
+
+        // Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
+        // Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
 
 
         Route::get('/car-types', [CarTypeController::class, 'index']);
@@ -120,6 +140,8 @@ Route::prefix('verify')->group(function () {
 
 // });
 
+  
+
 
 
 // Route::prefix('licenses')->group(function () {
@@ -136,7 +158,7 @@ Route::get('/get-expiration', function () {
     $mtd = [];
 
     foreach ($getAllCars as $car) {
-        $expiration = Carbon::parse($car->expiration_date);
+        $expiration = Carbon::parse($car->registration_date - 1);
 
         if ($expiration->greaterThan(Carbon::now())) {
             $mtd[] = [
@@ -188,5 +210,5 @@ Route::prefix('acl')->name('acl.')->group(function () {
     });
 });
 
-Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
-Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);
+// Route::post('/payment/initialize', [MonicreditPaymentController::class, 'initializePayment']);
+// Route::get('/payment/verify', [MonicreditPaymentController::class, 'verifyPayment']);

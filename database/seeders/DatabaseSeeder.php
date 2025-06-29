@@ -18,7 +18,11 @@ class DatabaseSeeder extends Seeder
             UserTypeSeeder::class,
             CarTypeSeeder::class,
             CountrySeeder::class,
-            RoleSeeder::class
+            RoleSeeder::class,
+            PaymentHeadSeeder::class,
+            GatewaySeeder::class,
+            BankSeeder::class,
+            RevenueHeadSeeder::class,
         ]);
 
         $admin = array(
