@@ -80,7 +80,7 @@ Route::controller(AuthController::class)->group(function () {
             Route::get('/', [PaymentScheduleController::class, 'getAllPaymentSchedule']);
             Route::post('/create', [PaymentScheduleController::class, 'store']);
             Route::get('/get-payment-head', [PaymentScheduleController::class, 'getAllPaymentHead']);
-            Route::post('/get-payment-schedule', [PaymentScheduleController::class, 'getPaymentScheduleByPaymenthead']);
+            Route::get('/get-payment-schedule', [PaymentScheduleController::class, 'getPaymentScheduleByPaymenthead']);
 
         });
 

@@ -432,7 +432,7 @@ private function handleReminder($userId, $expiryDate, $type, $refId)
 
     // Handle expired (negative days)
     if ($daysLeft < 0) {
-        $message = 'License Expiered.';
+        $message = 'License Expired.';
         
         Reminder::updateOrCreate(
             [

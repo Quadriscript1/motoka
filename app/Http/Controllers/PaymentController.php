@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\PaymentSchedule;
 // use Faker\Provider\ar_EG\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -17,6 +18,17 @@ class PaymentController extends Controller
 
     $transaction_id = Str::random(10);
 
+    $getPaymentSchedule = PaymentSchedule::where('id', $request->payment_schedule_id)->first();
+
+
+    $items = [
+        (object)[
+            'unit_cost' => $getPaymentSchedule->amount,
+            'item' => $getPaymentSchedule->payment_head->payment_head_name . " " . $getPaymentSchedule->revenue_head->revenue_head,
+            'revenue_head_code' => $getPaymentSchedule->revenue_head->revenue_head_code,
+        ]
+    ];
+
     $response = Http::post(env('MONICREDIT_BASE_URL') . '/payment/transactions/init-transaction', [
         'order_id' => $transaction_id,
         'public_key' => env('MONICREDIT_PUBLIC_KEY'),
@@ -27,7 +39,7 @@ class PaymentController extends Controller
             'phone' => $user->phone,
         ],
         "fee_bearer"=> "client",
-        'items' => $request['items'],
+        'items' => $items,
         'currency' => 'NGN',
         'paytype' => 'standard',
     ]);
@@ -35,11 +47,11 @@ class PaymentController extends Controller
 
     $save = Payment::create([
         'transaction_id' => $transaction_id,
-        'amount' => $request['items'][0]['unit_cost'],
-        'payment_schedule_id' => $request['items'][0]['payment_schedule_id'],
+        'amount' => $getPaymentSchedule->amount,
+        'payment_schedule_id' => $request->payment_schedule_id,
         'status' => 'pending',
         'reference_code' => $data['id'],
-        'payment_description' => null, 
+        'payment_description' => $items[0]->item, 
         'user_id' => $user->id, 
         'raw_response' => $response->json(),
     ]);
